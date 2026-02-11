@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template, session, redirect
+from flask import Blueprint, render_template, session, redirect, request
 from extensions import db
 from models import Transaction, Category, Budget
 from sqlalchemy import func, case
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -15,9 +15,48 @@ def dashboard():
     active_user = session.get("username", "Guest")
 
     # =========================
-    # Date calculations
+    # Date Range Handling
     # =========================
     today = date.today()
+
+    # Handle presets
+    preset = request.args.get("preset")
+    from_date_str = request.args.get("from_date")
+    to_date_str = request.args.get("to_date")
+
+    if preset == "last7days":
+        filter_start = today - timedelta(days=7)
+        filter_end = today
+    elif preset == "last30days":
+        filter_start = today - timedelta(days=30)
+        filter_end = today
+    elif preset == "thismonth":
+        filter_start = today.replace(day=1)
+        filter_end = today
+    elif preset == "lastmonth":
+        first_day_current = today.replace(day=1)
+        filter_end = first_day_current - timedelta(days=1)
+        filter_start = filter_end.replace(day=1)
+    elif preset == "thisyear":
+        filter_start = date(today.year, 1, 1)
+        filter_end = today
+    elif from_date_str or to_date_str:
+        filter_start = datetime.strptime(from_date_str, "%Y-%m-%d").date() if from_date_str else date(2000, 1, 1)
+        filter_end = datetime.strptime(to_date_str, "%Y-%m-%d").date() if to_date_str else today
+    else:
+        # Default: current month
+        filter_start = today.replace(day=1)
+        filter_end = today
+        from_date_str = None
+        to_date_str = None
+
+    # For template display
+    from_date_display = filter_start.strftime("%Y-%m-%d") if (from_date_str or preset) else None
+    to_date_display = filter_end.strftime("%Y-%m-%d") if (to_date_str or preset) else None
+
+    # =========================
+    # Date calculations for comparisons
+    # =========================
     first_day_current_month = today.replace(day=1)
 
     first_day_last_month = (first_day_current_month - timedelta(days=1)).replace(day=1)
@@ -54,15 +93,15 @@ def dashboard():
     ) or 0
 
     # =========================
-    # Current Month Expense
+    # Filtered Period Expense (replaces "Current Month")
     # =========================
     current_month_expense = (
         db.session.query(func.coalesce(func.sum(Transaction.amount), 0))
         .filter(
             Transaction.user_id == user_id,
             Transaction.transaction_type == "DEBIT",
-            Transaction.transaction_date >= first_day_current_month,
-            Transaction.transaction_date <= today
+            Transaction.transaction_date >= filter_start,
+            Transaction.transaction_date <= filter_end
         )
         .scalar()
     ) or 0
@@ -82,7 +121,7 @@ def dashboard():
     ) or 0
 
     # =========================
-    # Category-wise Expense
+    # Category-wise Expense (filtered)
     # =========================
     category_data = (
         db.session.query(
@@ -92,7 +131,9 @@ def dashboard():
         .join(Transaction, Transaction.category_id == Category.category_id)
         .filter(
             Transaction.user_id == user_id,
-            Transaction.transaction_type == "DEBIT"
+            Transaction.transaction_type == "DEBIT",
+            Transaction.transaction_date >= filter_start,
+            Transaction.transaction_date <= filter_end
         )
         .group_by(Category.category_name)
         .all()
@@ -199,7 +240,7 @@ def dashboard():
         ) or 0
 
     # =========================
-    # Daily Spending Trend (Current Month)
+    # Daily Spending Trend (Filtered Period)
     # =========================
     daily_spending = (
         db.session.query(
@@ -209,8 +250,8 @@ def dashboard():
         .filter(
             Transaction.user_id == user_id,
             Transaction.transaction_type == "DEBIT",
-            Transaction.transaction_date >= first_day_current_month,
-            Transaction.transaction_date <= today
+            Transaction.transaction_date >= filter_start,
+            Transaction.transaction_date <= filter_end
         )
         .group_by(Transaction.transaction_date)
         .order_by(Transaction.transaction_date)
@@ -290,5 +331,7 @@ def dashboard():
         daily_labels=daily_labels,
         daily_values=daily_values,
         weekly_data=weekly_data,
-        monthly_comparison=monthly_comparison
+        monthly_comparison=monthly_comparison,
+        from_date=from_date_display,
+        to_date=to_date_display
     )
