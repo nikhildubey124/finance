@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Transaction | FinanceTracker</title>
+    <title>Edit Transaction | FinanceTracker</title>
     <link rel="stylesheet" href="/static/responsive.css">
     <style>
         :root {
@@ -13,6 +13,7 @@
             --text-gray: #555;
             --white: #ffffff;
             --border-color: #e1e8ed;
+            --warning-orange: #f39c12;
         }
 
         body {
@@ -36,7 +37,7 @@
         }
 
         .header-brand {
-            font-weight: bold; 
+            font-weight: bold;
             font-size: 20px;
             letter-spacing: 0.5px;
         }
@@ -63,13 +64,12 @@
             opacity: 0.8;
         }
 
-        /* Username Badge positioned to the right of Logout */
         .user-badge {
             display: flex;
             align-items: center;
             background: rgba(255, 255, 255, 0.15);
             padding: 6px 16px;
-            border-radius: 6px; /* Matches form input radius */
+            border-radius: 6px;
             margin-left: 25px;
             font-size: 13px;
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -109,17 +109,24 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
         }
 
         h2 {
             color: var(--primary-navy);
             margin-top: 0;
-            margin-bottom: 25px;
+            margin-bottom: 10px;
             font-size: 22px;
             text-align: center;
-            border-bottom: 1px solid var(--border-color);
+        }
+
+        .edit-subtitle {
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 13px;
+            margin-bottom: 25px;
             padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
         }
 
         label {
@@ -144,13 +151,18 @@
         button {
             width: 100%;
             padding: 14px;
-            background-color: var(--action-green);
+            background-color: var(--warning-orange);
             color: white;
             border: none;
             border-radius: 6px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
         }
 
         .back-link {
@@ -163,6 +175,20 @@
         .back-link a {
             color: var(--text-gray);
             text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .warning-note {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #856404;
         }
     </style>
 </head>
@@ -195,36 +221,51 @@
 
 <div class="container">
     <div class="form-card">
-        <h2>New Transaction</h2>
+        <h2>Edit Transaction</h2>
+        <div class="edit-subtitle">Modify the transaction details below</div>
+
+        <div class="warning-note">
+            ⚠️ <strong>Note:</strong> Editing this transaction will update your financial reports and balance.
+        </div>
 
         <form method="POST">
+            <label>Transaction Date</label>
+            <input type="date" name="transaction_date" value="{{ transaction.transaction_date.strftime('%Y-%m-%d') }}" required>
+
             <label>Transaction Type</label>
-            <select name="type" onchange="location.href='?type=' + this.value;">
-                <option value="CREDIT" {% if txn_type == 'CREDIT' %}selected{% endif %}>Credit (Income)</option>
-                <option value="DEBIT" {% if txn_type == 'DEBIT' %}selected{% endif %}>Debit (Expense)</option>
+            <select name="type" id="typeSelect" onchange="updateCategories()">
+                <option value="CREDIT" {% if transaction.transaction_type == 'CREDIT' %}selected{% endif %}>Credit (Income)</option>
+                <option value="DEBIT" {% if transaction.transaction_type == 'DEBIT' %}selected{% endif %}>Debit (Expense)</option>
             </select>
 
             <label>Category</label>
-            <select name="category_id">
+            <select name="category_id" id="categorySelect">
                 {% for cat in categories %}
-                    <option value="{{ cat.category_id }}">
+                    <option value="{{ cat.category_id }}" {% if cat.category_id == transaction.category_id %}selected{% endif %}>
                         {{ cat.category_name }}
                     </option>
                 {% endfor %}
             </select>
 
             <label>Amount (₹)</label>
-            <input type="number" name="amount" placeholder="0" step="1" required>
+            <input type="number" name="amount" placeholder="0" step="0.01" value="{{ transaction.amount }}" required>
 
-            <button type="submit">Save Transaction</button>
+            <button type="submit">Update Transaction</button>
         </form>
 
         <div class="back-link">
-            <a href="/dashboard">← Cancel and return</a>
+            <a href="/transactions">← Cancel and return</a>
         </div>
     </div>
 </div>
 
 <script src="/static/app.js"></script>
+<script>
+    // Reload page with new type parameter when transaction type changes
+    function updateCategories() {
+        const type = document.getElementById('typeSelect').value;
+        window.location.href = `{{ url_for('transactions.edit_transaction', transaction_id=transaction.transaction_id) }}?type=${type}`;
+    }
+</script>
 </body>
 </html>

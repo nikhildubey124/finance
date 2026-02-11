@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, session, current_app, Response
+from flask import Blueprint, render_template, request, redirect, session, current_app, Response, flash
 from extensions import db
 from models import Transaction, Category, Budget
-from datetime import date, timedelta
-from sqlalchemy import func, case
+from datetime import date, timedelta, datetime
+from sqlalchemy import func, case, or_
 from io import StringIO
 import csv
 
@@ -59,6 +59,161 @@ def add_transaction():
         txn_type=txn_type,
         active_user=session.get("username", "Guest")
     )
+
+
+@txn_bp.route("/transactions")
+def transactions():
+    """Transaction History with Search, Filter, and Pagination"""
+    if "user_id" not in session:
+        return redirect("/")
+
+    user_id = session["user_id"]
+
+    # Get filter parameters
+    search = request.args.get("search", "").strip()
+    filter_type = request.args.get("type", "")
+    filter_category = request.args.get("category", "")
+    from_date_str = request.args.get("from_date", "")
+    to_date_str = request.args.get("to_date", "")
+    page = request.args.get("page", 1, type=int)
+    per_page = 20
+
+    # Build query
+    query = db.session.query(
+        Transaction.transaction_id,
+        Transaction.transaction_date,
+        Transaction.transaction_type,
+        Transaction.amount,
+        Category.category_name,
+        Category.category_id
+    ).join(Category, Transaction.category_id == Category.category_id).filter(
+        Transaction.user_id == user_id
+    )
+
+    # Apply filters
+    if filter_type:
+        query = query.filter(Transaction.transaction_type == filter_type)
+
+    if filter_category:
+        query = query.filter(Transaction.category_id == int(filter_category))
+
+    if from_date_str:
+        from_date = datetime.strptime(from_date_str, "%Y-%m-%d").date()
+        query = query.filter(Transaction.transaction_date >= from_date)
+
+    if to_date_str:
+        to_date = datetime.strptime(to_date_str, "%Y-%m-%d").date()
+        query = query.filter(Transaction.transaction_date <= to_date)
+
+    # Search by amount (if numeric) or category name
+    if search:
+        try:
+            search_amount = float(search)
+            query = query.filter(Transaction.amount == search_amount)
+        except ValueError:
+            query = query.filter(Category.category_name.ilike(f"%{search}%"))
+
+    # Order by date descending
+    query = query.order_by(Transaction.transaction_date.desc())
+
+    # Paginate
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    transactions_list = pagination.items
+
+    # Get all categories for filter dropdown
+    all_categories = Category.query.all()
+
+    return render_template(
+        "transactions.html",
+        transactions=transactions_list,
+        pagination=pagination,
+        all_categories=all_categories,
+        search=search,
+        filter_type=filter_type,
+        filter_category=filter_category,
+        from_date=from_date_str,
+        to_date=to_date_str,
+        active_user=session.get("username", "Guest")
+    )
+
+
+@txn_bp.route("/edit-transaction/<transaction_id>", methods=["GET", "POST"])
+def edit_transaction(transaction_id):
+    """Edit existing transaction"""
+    if "user_id" not in session:
+        return redirect("/")
+
+    transaction = Transaction.query.filter_by(
+        transaction_id=transaction_id,
+        user_id=session["user_id"]
+    ).first()
+
+    if not transaction:
+        return "Transaction not found", 404
+
+    if request.method == "POST":
+        try:
+            transaction.transaction_type = request.form.get("type").upper().strip()
+            transaction.amount = float(request.form.get("amount"))
+            transaction.category_id = int(request.form.get("category_id"))
+
+            # Parse date
+            date_str = request.form.get("transaction_date")
+            transaction.transaction_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+            db.session.commit()
+
+            current_app.logger.info(f"Transaction updated - ID: {transaction_id}, User: {session.get('username')}")
+
+            return redirect("/transactions")
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Transaction update error - ID: {transaction_id}, Error: {str(e)}")
+            return "Error updating transaction", 500
+
+    # GET request - show form
+    # Check if type parameter is provided (for dynamic category loading)
+    type_param = request.args.get("type")
+    if type_param:
+        transaction.transaction_type = type_param.upper()
+
+    categories = Category.query.filter_by(category_type=transaction.transaction_type).all()
+
+    return render_template(
+        "edit_transaction.html",
+        transaction=transaction,
+        categories=categories,
+        active_user=session.get("username", "Guest")
+    )
+
+
+@txn_bp.route("/delete-transaction/<transaction_id>")
+def delete_transaction(transaction_id):
+    """Delete a transaction"""
+    if "user_id" not in session:
+        return redirect("/")
+
+    try:
+        transaction = Transaction.query.filter_by(
+            transaction_id=transaction_id,
+            user_id=session["user_id"]
+        ).first()
+
+        if not transaction:
+            return "Transaction not found", 404
+
+        db.session.delete(transaction)
+        db.session.commit()
+
+        current_app.logger.info(f"Transaction deleted - ID: {transaction_id}, User: {session.get('username')}")
+
+        return redirect("/transactions")
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Transaction deletion error - ID: {transaction_id}, Error: {str(e)}")
+        return "Error deleting transaction", 500
 
 
 @txn_bp.route("/export-transactions")
