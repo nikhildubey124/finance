@@ -262,6 +262,88 @@
     </div>
     {% endif %}
 
+    <!-- COMPARISON ANALYTICS SECTION -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="margin-bottom: 20px; color: var(--primary-navy);">📊 Financial Comparisons & Trends</h3>
+
+        <!-- Budget vs Actual -->
+        {% if budget_comparison %}
+        <div class="chart-container" style="margin-bottom: 20px;">
+            <div class="chart-header">Budget vs Actual Spending</div>
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                    <div>
+                        <div style="font-size: 12px; color: #666;">Total Budget</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #3498db;">₹{{ total_budgeted }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #666;">Total Spent</div>
+                        <div style="font-size: 24px; font-weight: bold; color: {% if total_actual > total_budgeted %}#e74c3c{% else %}#27ae60{% endif %};">₹{{ total_actual }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #666;">Variance</div>
+                        <div style="font-size: 24px; font-weight: bold; color: {% if total_actual > total_budgeted %}#e74c3c{% else %}#27ae60{% endif %};">₹{{ total_budgeted - total_actual }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-box">
+                <canvas id="budgetActualChart"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Year over Year Comparison -->
+        {% if last_year_expense > 0 %}
+        <div class="card" style="margin-bottom: 20px; padding: 20px;">
+            <div class="chart-header" style="margin-bottom: 15px;">Year-over-Year Comparison</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                <div style="text-align: center; padding: 15px; background: #e3f2fd; border-radius: 6px;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 5px;">{{ today.strftime('%B %Y') }}</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #1976d2;">₹{{ current_month_expense }}</div>
+                    <div style="font-size: 11px; color: #666;">Current Month</div>
+                </div>
+                <div style="text-align: center; padding: 15px; background: #fff3e0; border-radius: 6px;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 5px;">{{ (today.replace(year=today.year-1)).strftime('%B %Y') }}</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #f57c00;">₹{{ last_year_expense }}</div>
+                    <div style="font-size: 11px; color: #666;">Last Year</div>
+                </div>
+                <div style="text-align: center; padding: 15px; background: {% if current_month_expense > last_year_expense %}#ffebee{% else %}#e8f5e9{% endif %}; border-radius: 6px;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Change</div>
+                    <div style="font-size: 28px; font-weight: bold; color: {% if current_month_expense > last_year_expense %}#c62828{% else %}#2e7d32{% endif %};">
+                        {{ "%.1f"|format(((current_month_expense - last_year_expense) / last_year_expense * 100) if last_year_expense > 0 else 0) }}%
+                    </div>
+                    <div style="font-size: 11px; color: #666;">{% if current_month_expense > last_year_expense %}↑ Increase{% else %}↓ Decrease{% endif %}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Spending Trends -->
+        <div class="charts-grid" style="margin-bottom: 20px;">
+            <div class="chart-container">
+                <div class="chart-header">Daily Spending Trend (Current Month)</div>
+                <div class="chart-box">
+                    <canvas id="dailyTrendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">Weekly Spending (Last 8 Weeks)</div>
+                <div class="chart-box">
+                    <canvas id="weeklyTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Comparison -->
+        <div class="chart-container" style="margin-bottom: 20px;">
+            <div class="chart-header">Monthly Spending Comparison (Last 6 Months)</div>
+            <div class="chart-box">
+                <canvas id="monthlyComparisonChart"></canvas>
+            </div>
+        </div>
+    </div>
+
     <div class="charts-grid">
         <div class="chart-container">
             <div class="chart-header">Expense Comparison</div>
@@ -360,6 +442,137 @@
             }
         }
     });
+
+    // Budget vs Actual Chart
+    {% if budget_comparison %}
+    const budgetComparison = {{ budget_comparison|tojson|safe }};
+    new Chart(document.getElementById('budgetActualChart'), {
+        type: 'bar',
+        data: {
+            labels: budgetComparison.map(b => b.category),
+            datasets: [
+                {
+                    label: 'Budget',
+                    data: budgetComparison.map(b => b.budget),
+                    backgroundColor: '#3498db',
+                    borderRadius: 6
+                },
+                {
+                    label: 'Actual',
+                    data: budgetComparison.map(b => b.actual),
+                    backgroundColor: budgetComparison.map(b => b.actual > b.budget ? '#e74c3c' : '#27ae60'),
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+    {% endif %}
+
+    // Daily Spending Trend Chart
+    const dailyLabels = {{ daily_labels|tojson|safe if daily_labels else '[]' }};
+    const dailyValues = {{ daily_values|tojson|safe if daily_values else '[]' }};
+
+    new Chart(document.getElementById('dailyTrendChart'), {
+        type: 'line',
+        data: {
+            labels: dailyLabels,
+            datasets: [{
+                label: 'Daily Spending',
+                data: dailyValues,
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                x: { grid: { display: false }, ticks: { maxRotation: 45, minRotation: 45 } }
+            }
+        }
+    });
+
+    // Weekly Spending Chart
+    {% if weekly_data %}
+    const weeklyData = {{ weekly_data|tojson|safe }};
+    new Chart(document.getElementById('weeklyTrendChart'), {
+        type: 'bar',
+        data: {
+            labels: weeklyData.map(w => w.week),
+            datasets: [{
+                label: 'Weekly Spending',
+                data: weeklyData.map(w => w.amount),
+                backgroundColor: '#9b59b6',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+    {% endif %}
+
+    // Monthly Comparison Chart (Last 6 months)
+    {% if monthly_comparison %}
+    const monthlyComparison = {{ monthly_comparison|tojson|safe }};
+    new Chart(document.getElementById('monthlyComparisonChart'), {
+        type: 'line',
+        data: {
+            labels: monthlyComparison.map(m => m.month),
+            datasets: [{
+                label: 'Monthly Spending',
+                data: monthlyComparison.map(m => m.amount),
+                borderColor: '#e74c3c',
+                backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 3,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: '#e74c3c'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+    {% endif %}
 </script>
 
 </body>
