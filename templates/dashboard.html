@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | FinanceTracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-navy: #1a2b3c;
+            --action-green: #27ae60;
+            --light-gray: #f4f7f6;
+            --text-gray: #555;
+            --white: #ffffff;
+            --border-color: #e1e8ed;
+            --expense-red: #e74c3c;
+            --warning-orange: #f39c12;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            color: var(--primary-navy);
+        }
+
+        header {
+            background-color: var(--primary-navy);
+            color: white;
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-brand {
+            font-weight: bold; 
+            font-size: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+        }
+
+        header nav {
+            display: flex;
+            align-items: center;
+        }
+
+        header nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+
+        header nav a:hover {
+            opacity: 0.8;
+        }
+
+        /* Username Badge positioned to the right of Logout */
+        .user-badge {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 16px;
+            border-radius: 6px; /* Matches form input radius */
+            margin-left: 25px;
+            font-size: 13px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            white-space: nowrap;
+        }
+
+        .status-indicator {
+            width: 6px;
+            height: 6px;
+            background-color: var(--action-green);
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .logged-in-as {
+            color: rgba(255, 255, 255, 0.7);
+            margin-right: 5px;
+            font-weight: 400;
+        }
+
+        .username-display {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .card h3 {
+            margin: 0;
+            font-size: 13px;
+            text-transform: uppercase;
+            color: var(--text-gray);
+            letter-spacing: 1px;
+        }
+
+        .balance-amount {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .btn-add {
+            background-color: var(--action-green);
+            color: white;
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            display: inline-block;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Fixed height box for the canvas to live in */
+        .chart-box {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .chart-header {
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .table-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            text-align: left;
+            font-size: 13px;
+            color: var(--text-gray);
+            border-bottom: 2px solid var(--light-gray);
+            padding: 12px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--light-gray);
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-brand">FinanceTracker</div>
+    
+    <div class="nav-right">
+        <nav>
+            <a href="/dashboard">Overview</a>
+            <a href="/add-transaction">Add Transaction</a>
+            <a href="/logout" style="color:#ff7675;">Logout</a>
+        </nav>
+
+        <div class="user-badge">
+            <span class="status-indicator"></span>
+            <span class="logged-in-as">User:</span>
+            <span class="username-display">{{ active_user }}</span>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="stats-grid">
+        <div class="card">
+            <h3>Current Balance</h3>
+            <div class="balance-amount" style="color: var(--primary-navy);">₹ {{ balance|default('0') }}</div>
+            <a href="/add-transaction" class="btn-add">+ New Transaction</a>
+        </div>
+
+        <div class="card">
+            <h3>Current Month</h3>
+            <div class="balance-amount" style="color: var(--expense-red);">₹ {{ current_month_expense|default('0') }}</div>
+            <p style="font-size: 12px; color: var(--text-gray);">Total spending this month</p>
+        </div>
+
+        <div class="card">
+            <h3>Last Month</h3>
+            <div class="balance-amount" style="color: var(--warning-orange);">₹ {{ last_month_expense|default('0') }}</div>
+            <p style="font-size: 12px; color: var(--text-gray);">Total spending last month</p>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-container">
+            <div class="chart-header">Expense Comparison</div>
+            <div class="chart-box">
+                <canvas id="monthCompareChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-header">Category Breakdown</div>
+            <div class="chart-box">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="chart-header">Recent Activity</div>
+
+        {% if recent_transactions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in recent_transactions %}
+                <tr>
+                    <td style="font-weight: bold; color: {{ 'var(--action-green)' if tx[0] == 'CREDIT' else 'var(--expense-red)' }}">
+                        {{ tx[0] }}
+                    </td>
+                    <td>{{ tx[2] }}</td>
+                    <td>₹ {{ tx[1] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p style="text-align:center;color:#999;">No recent activity</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    const lastMonth = parseFloat("{{ last_month_expense or 0 }}");
+    const currentMonth = parseFloat("{{ current_month_expense or 0 }}");
+    
+    // Monthly Comparison Chart
+    new Chart(document.getElementById('monthCompareChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Last Month', 'Current Month'],
+            datasets: [{
+                label: 'Spending (₹)',
+                data: [lastMonth, currentMonth],
+                backgroundColor: ['#f39c12', '#e74c3c'],
+                borderRadius: 8,
+                barThickness: 50
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Category Breakdown Chart
+    const categoryLabels = {{ categories|tojson|safe if categories else '[]' }};
+    const categoryValues = {{ category_values|tojson|safe if category_values else '[]' }};
+
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+            labels: categoryLabels,
+            datasets: [{
+                data: categoryValues,
+                backgroundColor: ['#1a2b3c', '#27ae60', '#f39c12', '#e74c3c', '#9b59b6', '#3498db'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

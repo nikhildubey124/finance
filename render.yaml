@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: financetracker
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: financetracker-db
+          property: connectionString
+      - key: MAIL_SERVER
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USE_TLS
+        value: True
+      - key: MAIL_USE_SSL
+        value: False
+      # Add these manually in Render dashboard:
+      # - MAIL_USERNAME
+      # - MAIL_PASSWORD
+      # - MAIL_DEFAULT_SENDER
+
+databases:
+  - name: financetracker-db
+    databaseName: financetracker
+    user: financetracker_user
