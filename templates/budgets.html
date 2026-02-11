@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Budget Management - Finance Tracker</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/responsive.css">
     <style>
         :root {
             --primary-navy: #1a2b3c;
@@ -89,10 +90,14 @@
     </style>
 </head>
 <body>
+    <div class="mobile-menu-overlay"></div>
+
     <header>
         <div class="header-brand">FinanceTracker</div>
 
         <div class="nav-right">
+            <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+
             <nav>
                 <a href="/dashboard">Overview</a>
                 <a href="/add-transaction">Add Transaction</a>
@@ -228,5 +233,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/app.js"></script>
 </body>
 </html>
