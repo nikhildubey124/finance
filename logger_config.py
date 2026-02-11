@@ -87,6 +87,13 @@ def setup_logger(app):
     app.logger.info(f'Environment: {"Development" if app.config["DEBUG"] else "Production"}')
     app.logger.info('='*60)
 
+    # Log HTTP requests
+    @app.after_request
+    def log_request(response):
+        from flask import request
+        app.logger.info(f'{request.method} {request.path} - Status: {response.status_code} - IP: {request.remote_addr}')
+        return response
+
     return app.logger
 
 def get_auth_logger():
