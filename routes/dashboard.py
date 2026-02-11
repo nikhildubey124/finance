@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, session, redirect
 from extensions import db
-from models import Transaction, Category
+from models import Transaction, Category, Budget
 from sqlalchemy import func, case
 from datetime import date, timedelta
 
@@ -105,6 +105,41 @@ def dashboard():
         .all()
     )
 
+    # =========================
+    # Budget Alerts
+    # =========================
+    budget_alerts = []
+    budgets = Budget.query.filter_by(
+        user_id=user_id,
+        month=today.month,
+        year=today.year
+    ).all()
+
+    for budget in budgets:
+        actual_spent = (
+            db.session.query(func.coalesce(func.sum(Transaction.amount), 0))
+            .filter(
+                Transaction.user_id == user_id,
+                Transaction.category_id == budget.category_id,
+                Transaction.transaction_type == "DEBIT",
+                Transaction.transaction_date >= first_day_current_month,
+                Transaction.transaction_date <= today
+            )
+            .scalar()
+        ) or 0
+
+        percentage = (float(actual_spent) / float(budget.monthly_limit) * 100) if budget.monthly_limit > 0 else 0
+
+        if percentage >= 80:
+            category = Category.query.get(budget.category_id)
+            budget_alerts.append({
+                'category_name': category.category_name,
+                'percentage': round(percentage, 1),
+                'spent': float(actual_spent),
+                'limit': float(budget.monthly_limit),
+                'status': 'danger' if percentage > 100 else 'warning'
+            })
+
     return render_template(
         "dashboard.html",
         active_user=active_user,
@@ -113,5 +148,6 @@ def dashboard():
         last_month_expense=round(last_month_expense, 2),
         categories=categories,
         category_values=category_values,
-        recent_transactions=recent_transactions
+        recent_transactions=recent_transactions,
+        budget_alerts=budget_alerts
     )

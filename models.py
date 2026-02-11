@@ -34,3 +34,21 @@ class Transaction(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey("categories.category_id"))
     transaction_date = db.Column(db.Date)
     category = db.relationship('Category', backref='transactions')
+
+
+class Budget(db.Model):
+    __tablename__ = "budgets"
+    budget_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(36), db.ForeignKey("users.user_id"), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey("categories.category_id"), nullable=False)
+    monthly_limit = db.Column(db.Numeric(12, 2), nullable=False)
+    month = db.Column(db.Integer, nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref='budgets')
+    category = db.relationship('Category', backref='budgets')
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'category_id', 'month', 'year', name='unique_budget'),
+    )
