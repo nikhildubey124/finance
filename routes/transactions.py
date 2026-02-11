@@ -120,8 +120,11 @@ def transactions():
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     transactions_list = pagination.items
 
-    # Get all categories for filter dropdown
-    all_categories = Category.query.all()
+    # Get categories for filter dropdown - filter by type if selected
+    if filter_type:
+        all_categories = Category.query.filter_by(category_type=filter_type).all()
+    else:
+        all_categories = Category.query.all()
 
     return render_template(
         "transactions.html",
