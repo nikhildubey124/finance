@@ -56,7 +56,8 @@ def add_transaction():
     return render_template(
         "add_transaction.html",
         categories=categories,
-        txn_type=txn_type
+        txn_type=txn_type,
+        active_user=session.get("username", "Guest")
     )
 
 
