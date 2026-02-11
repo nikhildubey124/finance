@@ -310,18 +310,18 @@
         <div class="chart-container" style="margin-bottom: 20px;">
             <div class="chart-header">Budget vs Actual Spending</div>
             <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; margin-bottom: 15px;">
-                <div style="display: flex; justify-content: space-around; text-align: center;">
-                    <div>
-                        <div style="font-size: 12px; color: #666;">Total Budget</div>
-                        <div style="font-size: 24px; font-weight: bold; color: #3498db;">₹{{ total_budgeted }}</div>
+                <div style="display: flex; justify-content: space-around; text-align: center; gap: 20px;">
+                    <div style="flex: 1; padding: 10px; border-right: 2px solid #dee2e6;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">Total Budget</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #3498db;">₹ {{ total_budgeted }}</div>
                     </div>
-                    <div>
-                        <div style="font-size: 12px; color: #666;">Total Spent</div>
-                        <div style="font-size: 24px; font-weight: bold; color: {% if total_actual > total_budgeted %}#e74c3c{% else %}#27ae60{% endif %};">₹{{ total_actual }}</div>
+                    <div style="flex: 1; padding: 10px; border-right: 2px solid #dee2e6;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">Total Spent</div>
+                        <div style="font-size: 24px; font-weight: bold; color: {% if total_actual > total_budgeted %}#e74c3c{% else %}#27ae60{% endif %};">₹ {{ total_actual }}</div>
                     </div>
-                    <div>
-                        <div style="font-size: 12px; color: #666;">Variance</div>
-                        <div style="font-size: 24px; font-weight: bold; color: {% if total_actual > total_budgeted %}#e74c3c{% else %}#27ae60{% endif %};">₹{{ total_budgeted - total_actual }}</div>
+                    <div style="flex: 1; padding: 10px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">Variance</div>
+                        <div style="font-size: 24px; font-weight: bold; color: {% if total_actual > total_budgeted %}#e74c3c{% else %}#27ae60{% endif %};">₹ {{ total_budgeted - total_actual }}</div>
                     </div>
                 </div>
             </div>
