@@ -81,7 +81,8 @@ def view_budgets():
         budget_data=budget_data,
         available_categories=available_categories,
         current_month=current_month,
-        current_year=current_year
+        current_year=current_year,
+        active_user=session.get("username", "Guest")
     )
 
 

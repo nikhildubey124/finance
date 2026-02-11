@@ -1,7 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, session, current_app
+from flask import Blueprint, render_template, request, redirect, session, current_app, Response
 from extensions import db
 from models import Transaction, Category
 from datetime import date
+from io import StringIO
+import csv
 
 txn_bp = Blueprint("transactions", __name__)
 
@@ -55,3 +57,61 @@ def add_transaction():
         categories=categories,
         txn_type=txn_type
     )
+
+
+@txn_bp.route("/export-transactions")
+def export_transactions():
+    """Export all user transactions to CSV file"""
+    if "user_id" not in session:
+        return redirect("/")
+
+    try:
+        user_id = session["user_id"]
+        username = session.get("username", "user")
+
+        # Get all transactions with category names
+        transactions = (
+            db.session.query(
+                Transaction.transaction_date,
+                Transaction.transaction_type,
+                Category.category_name,
+                Transaction.amount
+            )
+            .join(Category, Transaction.category_id == Category.category_id)
+            .filter(Transaction.user_id == user_id)
+            .order_by(Transaction.transaction_date.desc())
+            .all()
+        )
+
+        # Create CSV in memory
+        output = StringIO()
+        writer = csv.writer(output)
+
+        # Write header
+        writer.writerow(['Date', 'Type', 'Category', 'Amount'])
+
+        # Write transaction data
+        for txn in transactions:
+            writer.writerow([
+                txn.transaction_date.strftime('%Y-%m-%d'),
+                txn.transaction_type,
+                txn.category_name,
+                float(txn.amount)
+            ])
+
+        output.seek(0)
+
+        current_app.logger.info(f"CSV export - User: {username}, Transactions: {len(transactions)}")
+
+        # Return as downloadable file
+        return Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={
+                'Content-Disposition': f'attachment; filename={username}_transactions.csv'
+            }
+        )
+
+    except Exception as e:
+        current_app.logger.error(f"CSV export error - User: {session.get('username', 'Unknown')}, Error: {str(e)}")
+        return "Error exporting transactions", 500
