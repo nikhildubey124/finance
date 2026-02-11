@@ -4,7 +4,7 @@ from extensions import db, bcrypt, jwt, mail
 from logger_config import setup_logger
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask("finance_app")
     app.config.from_object(Config)
 
     # Initialize logging
