@@ -140,10 +140,10 @@ def export_transactions():
         ) or 0
 
         writer.writerow(['OVERALL FINANCIAL HEALTH'])
-        writer.writerow(['Current Balance', f'₹{float(balance):.2f}'])
-        writer.writerow(['Current Month Income', f'₹{float(current_month_income):.2f}'])
-        writer.writerow(['Current Month Expense', f'₹{float(current_month_expense):.2f}'])
-        writer.writerow(['Last Month Expense', f'₹{float(last_month_expense):.2f}'])
+        writer.writerow(['Current Balance', float(balance)])
+        writer.writerow(['Current Month Income', float(current_month_income)])
+        writer.writerow(['Current Month Expense', float(current_month_expense)])
+        writer.writerow(['Last Month Expense', float(last_month_expense)])
 
         # Month over month comparison
         if last_month_expense > 0:
@@ -200,9 +200,9 @@ def export_transactions():
 
             writer.writerow([
                 category.category_name,
-                f'₹{float(budget.monthly_limit):.2f}',
-                f'₹{float(actual_spent):.2f}',
-                f'₹{remaining:.2f}',
+                float(budget.monthly_limit),
+                float(actual_spent),
+                remaining,
                 f'{percentage:.1f}%',
                 status
             ])
@@ -210,8 +210,8 @@ def export_transactions():
         if budgets:
             writer.writerow([])
             writer.writerow(['BUDGET SUMMARY'])
-            writer.writerow(['Total Budget Allocated', f'₹{total_budget:.2f}'])
-            writer.writerow(['Total Spent Against Budget', f'₹{total_spent_against_budget:.2f}'])
+            writer.writerow(['Total Budget Allocated', total_budget])
+            writer.writerow(['Total Spent Against Budget', total_spent_against_budget])
             writer.writerow(['Categories Over Budget', over_budget_count])
             overall_budget_usage = (total_spent_against_budget / total_budget * 100) if total_budget > 0 else 0
             writer.writerow(['Overall Budget Usage', f'{overall_budget_usage:.1f}%'])
@@ -243,7 +243,7 @@ def export_transactions():
 
         for cat_name, amount in category_spending:
             pct = (float(amount) / float(current_month_expense) * 100) if current_month_expense > 0 else 0
-            writer.writerow([cat_name, f'₹{float(amount):.2f}', f'{pct:.1f}%'])
+            writer.writerow([cat_name, float(amount), f'{pct:.1f}%'])
 
         writer.writerow([])
 
@@ -252,10 +252,11 @@ def export_transactions():
 
         # Insight 1: Spending trend
         if last_month_expense > 0:
+            diff = float(abs(current_month_expense - last_month_expense))
             if current_month_expense > last_month_expense:
-                writer.writerow(['Spending Trend', f'Your spending increased by ₹{float(current_month_expense - last_month_expense):.2f} compared to last month'])
+                writer.writerow(['Spending Trend', f'Your spending increased by {diff:.2f} compared to last month'])
             else:
-                writer.writerow(['Spending Trend', f'Good! You saved ₹{float(last_month_expense - current_month_expense):.2f} compared to last month'])
+                writer.writerow(['Spending Trend', f'Good! You saved {diff:.2f} compared to last month'])
 
         # Insight 2: Budget health
         if budgets:
@@ -268,12 +269,12 @@ def export_transactions():
         if current_month_income > 0:
             savings = float(current_month_income) - float(current_month_expense)
             savings_rate = (savings / float(current_month_income)) * 100
-            writer.writerow(['Savings Rate', f'{savings_rate:.1f}% (₹{savings:.2f} saved this month)'])
+            writer.writerow(['Savings Rate', f'{savings_rate:.1f}% ({savings:.2f} saved this month)'])
 
         # Insight 4: Top spending category
         if category_spending:
             top_category, top_amount = category_spending[0]
-            writer.writerow(['Top Spending Category', f'{top_category} (₹{float(top_amount):.2f})'])
+            writer.writerow(['Top Spending Category', f'{top_category} ({float(top_amount):.2f})'])
 
         writer.writerow([])
         writer.writerow([])
@@ -300,7 +301,7 @@ def export_transactions():
                 txn.transaction_date.strftime('%Y-%m-%d'),
                 txn.transaction_type,
                 txn.category_name,
-                f'₹{float(txn.amount):.2f}'
+                float(txn.amount)
             ])
 
         output.seek(0)
