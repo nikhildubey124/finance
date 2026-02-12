@@ -22,12 +22,14 @@ def create_app():
     from routes.dashboard import dashboard_bp
     from routes.budgets import budget_bp
     from routes.categories import category_bp
+    from routes.bulk_upload import bulk_upload_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(txn_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(budget_bp)
     app.register_blueprint(category_bp)
+    app.register_blueprint(bulk_upload_bp)
 
     # ✅ Context processor MUST be inside create_app
     @app.context_processor

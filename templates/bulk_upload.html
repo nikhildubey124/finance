@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Upload - Finance Tracker</title>
+    <link rel="stylesheet" href="/static/responsive.css">
+    <style>
+        :root {
+            --primary-navy: #1a2b3c;
+            --action-green: #27ae60;
+            --light-gray: #f4f7f6;
+            --text-gray: #555;
+            --white: #ffffff;
+            --border-color: #e1e8ed;
+            --info-blue: #3498db;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            color: var(--primary-navy);
+        }
+
+        header {
+            background-color: var(--primary-navy);
+            color: white;
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-brand {
+            font-weight: bold;
+            font-size: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+        }
+
+        header nav {
+            display: flex;
+            align-items: center;
+        }
+
+        header nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+
+        header nav a:hover {
+            opacity: 0.8;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 16px;
+            border-radius: 6px;
+            margin-left: 25px;
+            font-size: 13px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            white-space: nowrap;
+        }
+
+        .status-indicator {
+            width: 6px;
+            height: 6px;
+            background-color: var(--action-green);
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .logged-in-as {
+            color: rgba(255, 255, 255, 0.7);
+            margin-right: 5px;
+            font-weight: 400;
+        }
+
+        .username-display {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        h2 {
+            color: var(--primary-navy);
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: var(--text-gray);
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .info-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .info-banner h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+
+        .info-banner p {
+            margin: 5px 0;
+            font-size: 14px;
+            opacity: 0.95;
+        }
+
+        .step-card {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--action-green);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 15px;
+        }
+
+        .step-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-navy);
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn-excel {
+            background-color: #217346;
+            color: white;
+        }
+
+        .btn-csv {
+            background-color: #0078d4;
+            color: white;
+        }
+
+        .btn-upload {
+            background-color: var(--action-green);
+            color: white;
+            font-size: 16px;
+            padding: 14px 28px;
+        }
+
+        .upload-area {
+            border: 3px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: #fafbfc;
+            transition: all 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: var(--action-green);
+            background: #f0f8f4;
+        }
+
+        .upload-area.drag-over {
+            border-color: var(--action-green);
+            background: #e8f5e9;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            color: var(--text-gray);
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-name {
+            margin-top: 15px;
+            font-size: 14px;
+            color: var(--action-green);
+            font-weight: 600;
+        }
+
+        .instructions {
+            background: #fff9e6;
+            border-left: 4px solid #f39c12;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+
+        .instructions h4 {
+            margin: 0 0 15px 0;
+            color: var(--primary-navy);
+            font-size: 16px;
+        }
+
+        .instructions ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .flash {
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .flash-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .download-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="mobile-menu-overlay"></div>
+
+<header>
+    <div class="header-brand">FinanceTracker</div>
+
+    <div class="nav-right">
+        <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+
+        <nav>
+            <a href="/dashboard">Overview</a>
+            <a href="/add-transaction">Add Transaction</a>
+            <a href="/transactions">Transactions</a>
+            <a href="/categories">Categories</a>
+            <a href="/budgets">Budgets</a>
+            <a href="/bulk-upload">Bulk Upload</a>
+            <a href="/export-transactions" style="color:#74b9ff;">Export CSV</a>
+            <a href="/logout" style="color:#ff7675;">Logout</a>
+        </nav>
+
+        <div class="user-badge">
+            <span class="status-indicator"></span>
+            <span class="logged-in-as">User:</span>
+            <span class="username-display">{{ active_user }}</span>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <h2>Bulk Transaction Upload</h2>
+    <p class="subtitle">Import previous month's transactions using Excel or CSV files</p>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Info Banner -->
+    <div class="info-banner">
+        <h3>Importing for: {{ previous_month }}</h3>
+        <p>Valid date range: {{ date_range }}</p>
+        <p>Upload your transactions from the previous month using our standardized template</p>
+    </div>
+
+    <!-- Step 1: Download Template -->
+    <div class="step-card">
+        <div class="step-header">
+            <div class="step-number">1</div>
+            <div class="step-title">Download Template</div>
+        </div>
+
+        <p style="margin-bottom: 20px;">Download the transaction template in your preferred format:</p>
+
+        <div class="download-buttons">
+            <a href="/download-template/excel" class="btn btn-excel">
+                <span>📊</span>
+                <span>Download Excel Template</span>
+            </a>
+            <a href="/download-template/csv" class="btn btn-csv">
+                <span>📄</span>
+                <span>Download CSV Template</span>
+            </a>
+        </div>
+
+        <div class="instructions">
+            <h4>Template Features:</h4>
+            <ul>
+                <li>Pre-formatted with correct column headers</li>
+                <li>Includes example transactions</li>
+                <li>Excel version includes instructions and category list</li>
+                <li>Ready to fill in with your data</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Step 2: Fill Template -->
+    <div class="step-card">
+        <div class="step-header">
+            <div class="step-number">2</div>
+            <div class="step-title">Fill in Your Data</div>
+        </div>
+
+        <div class="instructions">
+            <h4>Data Requirements:</h4>
+            <ul>
+                <li><strong>Transaction Date:</strong> Format YYYY-MM-DD (e.g., 2024-01-15), must be within {{ date_range }}</li>
+                <li><strong>Transaction Type:</strong> Either CREDIT (income) or DEBIT (expense)</li>
+                <li><strong>Amount:</strong> Positive number with up to 2 decimal places (e.g., 1000.50)</li>
+                <li><strong>Category Name:</strong> Must match one of your existing categories exactly</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Step 3: Upload File -->
+    <div class="step-card">
+        <div class="step-header">
+            <div class="step-number">3</div>
+            <div class="step-title">Upload Completed File</div>
+        </div>
+
+        <form action="/upload-transactions" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📤</div>
+                <div class="upload-text">
+                    <strong>Drag and drop your file here</strong><br>
+                    or click to browse
+                </div>
+                <input type="file" name="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv" required>
+                <label for="fileInput" class="btn btn-upload">Choose File</label>
+                <div class="file-name" id="fileName"></div>
+            </div>
+
+            <div style="margin-top: 25px; text-align: center;">
+                <button type="submit" class="btn btn-upload" id="submitBtn" disabled>
+                    Upload & Import Transactions
+                </button>
+            </div>
+        </form>
+
+        <div class="instructions" style="margin-top: 20px;">
+            <h4>File Requirements:</h4>
+            <ul>
+                <li>Supported formats: Excel (.xlsx, .xls) or CSV (.csv)</li>
+                <li>Maximum file size: 10 MB</li>
+                <li>Duplicate transactions will be automatically detected and skipped</li>
+                <li>Invalid records will be reported for correction</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script src="/static/app.js"></script>
+<script>
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // File input change
+    fileInput.addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            fileName.textContent = '✓ Selected: ' + this.files[0].name;
+            submitBtn.disabled = false;
+        }
+    });
+
+    // Label click handler
+    document.querySelector('label[for="fileInput"]').addEventListener('click', function(e) {
+        e.preventDefault();
+        fileInput.click();
+    });
+
+    // Drag and drop
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('drag-over');
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('drag-over');
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('drag-over');
+
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            fileInput.files = e.dataTransfer.files;
+            fileName.textContent = '✓ Selected: ' + e.dataTransfer.files[0].name;
+            submitBtn.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>
