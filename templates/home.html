@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinanceTracker - Take Control of Your Finances</title>
+    <link rel="stylesheet" href="/static/responsive.css">
+    <style>
+        :root {
+            --primary-navy: #1a2b3c;
+            --action-green: #27ae60;
+            --light-gray: #f4f7f6;
+            --text-gray: #555;
+            --white: #ffffff;
+            --border-color: #e1e8ed;
+            --accent-blue: #3498db;
+            --soft-green: #e8f5e9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f4f7f6 0%, #e8f5e9 100%);
+            color: var(--primary-navy);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--primary-navy);
+            color: white;
+            padding: 20px 5%;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            font-size: 32px;
+        }
+
+        /* Main Container */
+        .main-container {
+            flex: 1;
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 40px 5%;
+            gap: 40px;
+        }
+
+        /* Left Content Area */
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .hero-section {
+            margin-bottom: 40px;
+        }
+
+        .headline {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--primary-navy);
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+
+        .tagline {
+            font-size: 22px;
+            color: var(--text-gray);
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .description {
+            font-size: 16px;
+            color: var(--text-gray);
+            line-height: 1.8;
+            margin-bottom: 40px;
+        }
+
+        /* Features Grid */
+        .features-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--primary-navy);
+            margin-bottom: 25px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .feature-card {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-navy);
+            margin-bottom: 10px;
+        }
+
+        .feature-description {
+            font-size: 14px;
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        /* Benefits Section */
+        .benefits-list {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: start;
+            gap: 15px;
+            padding: 15px;
+            background: var(--white);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .benefit-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .benefit-text {
+            font-size: 15px;
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        /* Right Navigation Panel */
+        .nav-panel {
+            width: 320px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-self: start;
+            position: sticky;
+            top: 40px;
+        }
+
+        .nav-card {
+            background: var(--white);
+            padding: 35px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .nav-card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary-navy);
+            margin-bottom: 20px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .nav-btn-primary {
+            background-color: var(--action-green);
+            color: white;
+        }
+
+        .nav-btn-primary:hover {
+            background-color: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+        }
+
+        .nav-btn-secondary {
+            background-color: var(--primary-navy);
+            color: white;
+        }
+
+        .nav-btn-secondary:hover {
+            background-color: #152230;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 43, 60, 0.3);
+        }
+
+        .nav-btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .nav-btn-outline:hover {
+            background-color: var(--accent-blue);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-icon {
+            font-size: 18px;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary-navy) 0%, #2c3e50 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .cta-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .cta-text {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .cta-btn {
+            background-color: var(--action-green);
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .cta-btn:hover {
+            background-color: #229954;
+            transform: scale(1.05);
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--primary-navy);
+            color: white;
+            padding: 30px 5%;
+            margin-top: 40px;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 25px;
+        }
+
+        .footer-link {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+
+        .footer-link:hover {
+            opacity: 0.7;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .nav-panel {
+                width: 100%;
+                position: static;
+            }
+
+            .nav-card {
+                padding: 25px;
+            }
+
+            .headline {
+                font-size: 38px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .headline {
+                font-size: 32px;
+            }
+
+            .tagline {
+                font-size: 18px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .logo {
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                padding: 20px 5%;
+            }
+
+            .headline {
+                font-size: 28px;
+            }
+
+            .tagline {
+                font-size: 16px;
+            }
+
+            .nav-buttons {
+                gap: 12px;
+            }
+
+            .nav-btn {
+                padding: 14px 20px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">💰</span>
+                <span>FinanceTracker</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Left Content Area -->
+        <div class="content-area">
+            <!-- Hero Section -->
+            <div class="hero-section">
+                <h1 class="headline">Take Control of Your Financial Future</h1>
+                <p class="tagline">Smart, Simple, and Secure Personal Finance Management</p>
+                <p class="description">
+                    FinanceTracker is your all-in-one solution for managing personal finances with ease.
+                    Track expenses, monitor income, set budgets, and gain valuable insights into your spending
+                    habits—all in one intuitive platform. Whether you're saving for a goal or just keeping your
+                    finances organized, we've got you covered.
+                </p>
+            </div>
+
+            <!-- Key Features -->
+            <div class="features-section">
+                <h2 class="section-title">Core Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-title">Smart Dashboard</div>
+                        <p class="feature-description">
+                            Get a complete overview of your finances with real-time insights and visual analytics.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💳</div>
+                        <div class="feature-title">Transaction Tracking</div>
+                        <p class="feature-description">
+                            Record and categorize every transaction to understand exactly where your money goes.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <div class="feature-title">Budget Planning</div>
+                        <p class="feature-description">
+                            Set monthly budgets, track spending limits, and receive alerts to stay on track.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📁</div>
+                        <div class="feature-title">Bulk Upload</div>
+                        <p class="feature-description">
+                            Import historical transactions via Excel or CSV for comprehensive financial history.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🏷️</div>
+                        <div class="feature-title">Custom Categories</div>
+                        <p class="feature-description">
+                            Organize expenses with personalized categories, icons, and color-coded labels.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📈</div>
+                        <div class="feature-title">Reports & Analytics</div>
+                        <p class="feature-description">
+                            Generate detailed reports and export data for deeper financial analysis.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Benefits -->
+            <div class="benefits-section">
+                <h2 class="section-title">Why Choose FinanceTracker?</h2>
+                <ul class="benefits-list">
+                    <li class="benefit-item">
+                        <span class="benefit-icon">🔒</span>
+                        <span class="benefit-text">
+                            <strong>Bank-Level Security:</strong> Your personal and financial data is encrypted
+                            with industry-standard encryption, ensuring maximum privacy and protection.
+                        </span>
+                    </li>
+                    <li class="benefit-item">
+                        <span class="benefit-icon">⚡</span>
+                        <span class="benefit-text">
+                            <strong>Easy to Use:</strong> Intuitive interface designed for everyone—no financial
+                            expertise required. Start tracking in minutes.
+                        </span>
+                    </li>
+                    <li class="benefit-item">
+                        <span class="benefit-icon">📱</span>
+                        <span class="benefit-text">
+                            <strong>Fully Responsive:</strong> Access your finances anytime, anywhere—on desktop,
+                            tablet, or mobile devices.
+                        </span>
+                    </li>
+                    <li class="benefit-item">
+                        <span class="benefit-icon">🎨</span>
+                        <span class="benefit-text">
+                            <strong>Customizable Experience:</strong> Tailor categories, budgets, and views to
+                            match your unique financial needs and preferences.
+                        </span>
+                    </li>
+                    <li class="benefit-item">
+                        <span class="benefit-icon">💡</span>
+                        <span class="benefit-text">
+                            <strong>Actionable Insights:</strong> Discover spending patterns, identify savings
+                            opportunities, and make informed financial decisions.
+                        </span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- CTA Section -->
+            <div class="cta-section">
+                <h3 class="cta-title">Ready to Take Control?</h3>
+                <p class="cta-text">
+                    Join thousands of users who have transformed their financial lives with FinanceTracker.
+                </p>
+                <a href="/register" class="cta-btn">Get Started Free</a>
+            </div>
+        </div>
+
+        <!-- Right Navigation Panel -->
+        <div class="nav-panel">
+            <div class="nav-card">
+                <h3 class="nav-card-title">Get Started</h3>
+                <div class="nav-buttons">
+                    <a href="/login" class="nav-btn nav-btn-primary">
+                        <span class="btn-icon">🔑</span>
+                        <span>Login</span>
+                    </a>
+                    <a href="/register" class="nav-btn nav-btn-secondary">
+                        <span class="btn-icon">✨</span>
+                        <span>Sign Up</span>
+                    </a>
+                    <a href="/user-manual" class="nav-btn nav-btn-outline">
+                        <span class="btn-icon">📖</span>
+                        <span>User Manual</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-content">
+            <div class="footer-text">
+                &copy; 2026 FinanceTracker. All rights reserved.
+            </div>
+            <div class="footer-links">
+                <a href="#" class="footer-link">Privacy Policy</a>
+                <a href="#" class="footer-link">Terms of Service</a>
+                <a href="#" class="footer-link">Contact Support</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

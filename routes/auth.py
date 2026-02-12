@@ -16,7 +16,12 @@ RESET_TOKEN_EXPIRY = 1800
 # Get authentication logger
 auth_logger = get_auth_logger()
 
-@auth_bp.route("/", methods=["GET", "POST"])
+@auth_bp.route("/")
+def home():
+    """Render the homepage"""
+    return render_template("home.html")
+
+@auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form.get("username")
@@ -218,6 +223,11 @@ def reset_password(token):
 
     return render_template("reset_password.html", email=user.email)
 
+
+@auth_bp.route("/user-manual")
+def user_manual():
+    """Display user manual page with download option"""
+    return render_template("user_manual.html")
 
 @auth_bp.route("/logout")
 def logout():
