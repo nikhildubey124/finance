@@ -55,6 +55,13 @@ def register():
             flash("Username already available. Please choose another.", "error")
             return redirect("/register")
 
+        # ✅ CHECK IF EMAIL EXISTS (using email hash)
+        existing_email = User.find_by_email(email)
+        if existing_email:
+            auth_logger.warning(f"Registration failed - Email already exists: {email}, IP: {ip_address}")
+            flash("Email already registered. Please use another email or login.", "error")
+            return redirect("/register")
+
         hashed_password = bcrypt.generate_password_hash(
             request.form["password"]
         ).decode("utf-8")
@@ -91,7 +98,7 @@ def register():
 def forgot_password():
     if request.method == "POST":
         email = request.form.get("email", "").strip()
-        user = User.query.filter_by(email=email).first()
+        user = User.find_by_email(email)
 
         if user:
             # Generate secure random token

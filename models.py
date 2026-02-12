@@ -1,14 +1,22 @@
 from extensions import db
 import uuid
+import hashlib
 from datetime import datetime
+from encryption_utils import encrypt_field, decrypt_field
 
 class User(db.Model):
     __tablename__ = "users"
 
     user_id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    full_name = db.Column(db.String(100), nullable=False)
-    mobile_number = db.Column(db.String(15), nullable=False)
-    email = db.Column(db.String(150), unique=True, nullable=False)
+
+    # Encrypted fields - stored as longer strings to accommodate encrypted data
+    _full_name = db.Column("full_name", db.String(500), nullable=False)
+    _mobile_number = db.Column("mobile_number", db.String(500), nullable=False)
+    _email = db.Column("email", db.String(500), nullable=False)  # Encrypted email value
+
+    # Email hash for lookups (since encrypted email can't be queried directly)
+    email_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
+
     username = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
 
@@ -17,6 +25,50 @@ class User(db.Model):
     reset_token_expiry = db.Column(db.DateTime, nullable=True)
 
     transactions = db.relationship('Transaction', backref='user', lazy=True)
+
+    # Properties for transparent encryption/decryption
+    @property
+    def full_name(self):
+        """Decrypt full_name when accessed"""
+        return decrypt_field(self._full_name)
+
+    @full_name.setter
+    def full_name(self, value):
+        """Encrypt full_name when set"""
+        self._full_name = encrypt_field(value)
+
+    @property
+    def mobile_number(self):
+        """Decrypt mobile_number when accessed"""
+        return decrypt_field(self._mobile_number)
+
+    @mobile_number.setter
+    def mobile_number(self, value):
+        """Encrypt mobile_number when set"""
+        self._mobile_number = encrypt_field(value)
+
+    @property
+    def email(self):
+        """Decrypt email when accessed"""
+        return decrypt_field(self._email)
+
+    @email.setter
+    def email(self, value):
+        """Encrypt email when set and create hash for lookups"""
+        self._email = encrypt_field(value)
+        # Store SHA-256 hash of email for database lookups
+        self.email_hash = hashlib.sha256(value.lower().encode()).hexdigest()
+
+    @staticmethod
+    def hash_email(email: str) -> str:
+        """Generate SHA-256 hash of email for lookup purposes"""
+        return hashlib.sha256(email.lower().encode()).hexdigest()
+
+    @staticmethod
+    def find_by_email(email: str):
+        """Find user by email using the hash"""
+        email_hash = User.hash_email(email)
+        return User.query.filter_by(email_hash=email_hash).first()
 
 class Category(db.Model):
     __tablename__ = "categories"
