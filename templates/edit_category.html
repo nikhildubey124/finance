@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Transaction | FinanceTracker</title>
+    <title>Edit Category | FinanceTracker</title>
     <link rel="stylesheet" href="/static/responsive.css">
     <style>
         :root {
@@ -13,6 +13,7 @@
             --text-gray: #555;
             --white: #ffffff;
             --border-color: #e1e8ed;
+            --warning-orange: #f39c12;
         }
 
         body {
@@ -36,7 +37,7 @@
         }
 
         .header-brand {
-            font-weight: bold; 
+            font-weight: bold;
             font-size: 20px;
             letter-spacing: 0.5px;
         }
@@ -63,13 +64,12 @@
             opacity: 0.8;
         }
 
-        /* Username Badge positioned to the right of Logout */
         .user-badge {
             display: flex;
             align-items: center;
             background: rgba(255, 255, 255, 0.15);
             padding: 6px 16px;
-            border-radius: 6px; /* Matches form input radius */
+            border-radius: 6px;
             margin-left: 25px;
             font-size: 13px;
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -109,17 +109,24 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             width: 100%;
-            max-width: 400px;
+            max-width: 500px;
         }
 
         h2 {
             color: var(--primary-navy);
             margin-top: 0;
-            margin-bottom: 25px;
+            margin-bottom: 10px;
             font-size: 22px;
             text-align: center;
-            border-bottom: 1px solid var(--border-color);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 13px;
+            margin-bottom: 25px;
             padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
         }
 
         label {
@@ -141,16 +148,33 @@
             font-size: 15px;
         }
 
+        input[type="color"] {
+            height: 50px;
+            cursor: pointer;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-top: -15px;
+            margin-bottom: 20px;
+        }
+
         button {
             width: 100%;
             padding: 14px;
-            background-color: var(--action-green);
+            background-color: var(--warning-orange);
             color: white;
             border: none;
             border-radius: 6px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
         }
 
         .back-link {
@@ -163,6 +187,29 @@
         .back-link a {
             color: var(--text-gray);
             text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .preview-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .preview-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .preview-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-navy);
         }
     </style>
 </head>
@@ -196,36 +243,80 @@
 
 <div class="container">
     <div class="form-card">
-        <h2>New Transaction</h2>
+        <h2>Edit Category</h2>
+        <div class="subtitle">Update your custom category details</div>
+
+        <!-- Preview Box -->
+        <div class="preview-box">
+            <div class="preview-icon" id="previewIcon" style="background-color: {{ category.color or '#3498db' }}; border-radius: 8px; padding: 10px;">
+                {{ category.icon or '💰' }}
+            </div>
+            <div class="preview-name" id="previewName">{{ category.category_name }}</div>
+        </div>
 
         <form method="POST">
-            <label>Transaction Type</label>
-            <select name="type" onchange="location.href='?type=' + this.value;">
-                <option value="CREDIT" {% if txn_type == 'CREDIT' %}selected{% endif %}>Credit (Income)</option>
-                <option value="DEBIT" {% if txn_type == 'DEBIT' %}selected{% endif %}>Debit (Expense)</option>
+            <label>Category Name *</label>
+            <input type="text" name="category_name" value="{{ category.category_name }}" required id="categoryName">
+
+            <label>Category Type *</label>
+            <select name="category_type" required>
+                <option value="CREDIT" {% if category.category_type == 'CREDIT' %}selected{% endif %}>Credit (Income)</option>
+                <option value="DEBIT" {% if category.category_type == 'DEBIT' %}selected{% endif %}>Debit (Expense)</option>
             </select>
 
-            <label>Category</label>
-            <select name="category_id">
-                {% for cat in categories %}
-                    <option value="{{ cat.category_id }}">
-                        {{ cat.category_name }}
+            <label>Icon (Emoji)</label>
+            <input type="text" name="icon" value="{{ category.icon or '' }}" placeholder="💰 🏠 🍔 🚗 ✈️" maxlength="2" id="categoryIcon">
+            <div class="form-hint">Choose an emoji to represent this category</div>
+
+            <label>Color</label>
+            <input type="color" name="color" value="{{ category.color or '#3498db' }}" id="categoryColor">
+            <div class="form-hint">Pick a color for visual identification</div>
+
+            <label>Parent Category (Optional)</label>
+            <select name="parent_category_id">
+                <option value="">None (Top-level category)</option>
+                {% for cat in parent_categories %}
+                    <option value="{{ cat.category_id }}" {% if category.parent_category_id == cat.category_id %}selected{% endif %}>
+                        {{ cat.category_name }} ({{ cat.category_type }})
                     </option>
                 {% endfor %}
             </select>
+            <div class="form-hint">Make this a subcategory of an existing category</div>
 
-            <label>Amount (₹)</label>
-            <input type="number" name="amount" placeholder="0" step="1" required>
-
-            <button type="submit">Save Transaction</button>
+            <button type="submit">Update Category</button>
         </form>
 
         <div class="back-link">
-            <a href="/dashboard">← Cancel and return</a>
+            <a href="/categories">← Cancel and return to categories</a>
         </div>
     </div>
 </div>
 
 <script src="/static/app.js"></script>
+<script>
+    // Live preview update
+    const nameInput = document.getElementById('categoryName');
+    const iconInput = document.getElementById('categoryIcon');
+    const colorInput = document.getElementById('categoryColor');
+    const previewName = document.getElementById('previewName');
+    const previewIcon = document.getElementById('previewIcon');
+
+    // Initialize preview background
+    const initialColor = '{{ category.color or "#3498db" }}';
+    previewIcon.parentElement.style.backgroundColor = initialColor + '33';
+
+    nameInput.addEventListener('input', function() {
+        previewName.textContent = this.value || 'Category Preview';
+    });
+
+    iconInput.addEventListener('input', function() {
+        previewIcon.textContent = this.value || '{{ category.icon or "💰" }}';
+    });
+
+    colorInput.addEventListener('input', function() {
+        previewIcon.parentElement.style.backgroundColor = this.value + '33';
+        previewIcon.style.backgroundColor = this.value;
+    });
+</script>
 </body>
 </html>
