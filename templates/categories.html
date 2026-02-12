@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Management - Finance Tracker</title>
+    <link rel="stylesheet" href="/static/responsive.css">
+    <style>
+        :root {
+            --primary-navy: #1a2b3c;
+            --action-green: #27ae60;
+            --light-gray: #f4f7f6;
+            --text-gray: #555;
+            --white: #ffffff;
+            --border-color: #e1e8ed;
+            --danger-red: #e74c3c;
+            --warning-orange: #f39c12;
+            --credit-green: #27ae60;
+            --debit-red: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            color: var(--primary-navy);
+        }
+
+        header {
+            background-color: var(--primary-navy);
+            color: white;
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-brand {
+            font-weight: bold;
+            font-size: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+        }
+
+        header nav {
+            display: flex;
+            align-items: center;
+        }
+
+        header nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+
+        header nav a:hover {
+            opacity: 0.8;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 16px;
+            border-radius: 6px;
+            margin-left: 25px;
+            font-size: 13px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            white-space: nowrap;
+        }
+
+        .status-indicator {
+            width: 6px;
+            height: 6px;
+            background-color: var(--action-green);
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .logged-in-as {
+            color: rgba(255, 255, 255, 0.7);
+            margin-right: 5px;
+            font-weight: 400;
+        }
+
+        .username-display {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        h2 {
+            color: var(--primary-navy);
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: var(--text-gray);
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.85;
+        }
+
+        .btn-primary {
+            background-color: var(--action-green);
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-orange);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-red);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .category-section {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title .badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-credit {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .badge-debit {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .category-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .category-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .category-card.system {
+            background-color: #f8f9fa;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .category-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        .category-name {
+            font-size: 16px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .category-meta {
+            font-size: 11px;
+            color: var(--text-gray);
+            margin-bottom: 10px;
+        }
+
+        .category-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .system-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: #6c757d;
+            color: white;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .subcategory-card {
+            margin-left: 20px;
+            border-left: 3px solid var(--border-color);
+        }
+
+        .no-categories {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-gray);
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .flash {
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .flash-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .category-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="mobile-menu-overlay"></div>
+
+<header>
+    <div class="header-brand">FinanceTracker</div>
+
+    <div class="nav-right">
+        <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+
+        <nav>
+            <a href="/dashboard">Overview</a>
+            <a href="/add-transaction">Add Transaction</a>
+            <a href="/transactions">Transactions</a>
+            <a href="/categories">Categories</a>
+            <a href="/budgets">Budgets</a>
+            <a href="/export-transactions" style="color:#74b9ff;">Export CSV</a>
+            <a href="/logout" style="color:#ff7675;">Logout</a>
+        </nav>
+
+        <div class="user-badge">
+            <span class="status-indicator"></span>
+            <span class="logged-in-as">User:</span>
+            <span class="username-display">{{ active_user }}</span>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <h2>Category Management</h2>
+    <p class="subtitle">Manage your income and expense categories, add custom categories, and organize with subcategories</p>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+        <div></div>
+        <a href="/add-category" class="btn btn-primary">+ Add Custom Category</a>
+    </div>
+
+    <!-- Income Categories (CREDIT) -->
+    <div class="category-section">
+        <div class="section-header">
+            <div class="section-title">
+                <span>Income Categories</span>
+                <span class="badge badge-credit">Credit</span>
+                <span style="font-size: 12px; color: #666; font-weight: normal;">({{ credit_categories|length }} categories)</span>
+            </div>
+        </div>
+
+        {% if credit_categories %}
+            <div class="category-grid">
+                {% for category in credit_categories %}
+                    <div class="category-card {% if category.is_system_category() %}system{% endif %}">
+                        <div class="category-header">
+                            <div class="category-icon" style="background-color: {{ category.color or '#27ae60' }};">
+                                {{ category.icon or '💰' }}
+                            </div>
+                            <div class="category-name">{{ category.category_name }}</div>
+                        </div>
+
+                        <div class="category-meta">
+                            {% if category.is_system_category() %}
+                                <span class="system-badge">System</span>
+                            {% else %}
+                                <span>Custom Category</span>
+                            {% endif %}
+
+                            {% if category.parent %}
+                                <span> • Subcategory of: {{ category.parent.category_name }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% if category.is_user_category() %}
+                            <div class="category-actions">
+                                <a href="/edit-category/{{ category.category_id }}" class="btn btn-warning btn-sm">Edit</a>
+                                <a href="/delete-category/{{ category.category_id }}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Are you sure you want to delete this category?')">
+                                    Delete
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-categories">
+                <p>No income categories found. Add your first custom income category!</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Expense Categories (DEBIT) -->
+    <div class="category-section">
+        <div class="section-header">
+            <div class="section-title">
+                <span>Expense Categories</span>
+                <span class="badge badge-debit">Debit</span>
+                <span style="font-size: 12px; color: #666; font-weight: normal;">({{ debit_categories|length }} categories)</span>
+            </div>
+        </div>
+
+        {% if debit_categories %}
+            <div class="category-grid">
+                {% for category in debit_categories %}
+                    <div class="category-card {% if category.is_system_category() %}system{% endif %}">
+                        <div class="category-header">
+                            <div class="category-icon" style="background-color: {{ category.color or '#e74c3c' }};">
+                                {{ category.icon or '💸' }}
+                            </div>
+                            <div class="category-name">{{ category.category_name }}</div>
+                        </div>
+
+                        <div class="category-meta">
+                            {% if category.is_system_category() %}
+                                <span class="system-badge">System</span>
+                            {% else %}
+                                <span>Custom Category</span>
+                            {% endif %}
+
+                            {% if category.parent %}
+                                <span> • Subcategory of: {{ category.parent.category_name }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% if category.is_user_category() %}
+                            <div class="category-actions">
+                                <a href="/edit-category/{{ category.category_id }}" class="btn btn-warning btn-sm">Edit</a>
+                                <a href="/delete-category/{{ category.category_id }}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Are you sure you want to delete this category?')">
+                                    Delete
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-categories">
+                <p>No expense categories found. Add your first custom expense category!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

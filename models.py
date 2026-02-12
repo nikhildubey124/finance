@@ -100,6 +100,30 @@ class Category(db.Model):
     category_name = db.Column(db.String(50), nullable=False)
     category_type = db.Column(db.String(10), nullable=False)  # CREDIT / DEBIT
 
+    # User ownership - NULL means system/default category
+    user_id = db.Column(db.String(36), db.ForeignKey("users.user_id"), nullable=True)
+
+    # Visual customization
+    icon = db.Column(db.String(50), nullable=True)  # Emoji or icon class
+    color = db.Column(db.String(7), nullable=True)  # Hex color code (e.g., #3498db)
+
+    # Subcategory support
+    parent_category_id = db.Column(db.Integer, db.ForeignKey("categories.category_id"), nullable=True)
+
+    # Relationships
+    subcategories = db.relationship('Category', backref=db.backref('parent', remote_side=[category_id]), lazy=True)
+
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def is_system_category(self):
+        """Check if this is a system/default category"""
+        return self.user_id is None
+
+    def is_user_category(self):
+        """Check if this is a user-created category"""
+        return self.user_id is not None
+
 
 class Transaction(db.Model):
     __tablename__ = "transactions"
