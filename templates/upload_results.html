@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Results - Finance Tracker</title>
+    <link rel="stylesheet" href="/static/responsive.css">
+    <style>
+        :root {
+            --primary-navy: #1a2b3c;
+            --action-green: #27ae60;
+            --light-gray: #f4f7f6;
+            --text-gray: #555;
+            --white: #ffffff;
+            --border-color: #e1e8ed;
+            --danger-red: #e74c3c;
+            --warning-orange: #f39c12;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            color: var(--primary-navy);
+        }
+
+        header {
+            background-color: var(--primary-navy);
+            color: white;
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-brand {
+            font-weight: bold;
+            font-size: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+        }
+
+        header nav {
+            display: flex;
+            align-items: center;
+        }
+
+        header nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+
+        header nav a:hover {
+            opacity: 0.8;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 16px;
+            border-radius: 6px;
+            margin-left: 25px;
+            font-size: 13px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            white-space: nowrap;
+        }
+
+        .status-indicator {
+            width: 6px;
+            height: 6px;
+            background-color: var(--action-green);
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .logged-in-as {
+            color: rgba(255, 255, 255, 0.7);
+            margin-right: 5px;
+            font-weight: 400;
+        }
+
+        .username-display {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        h2 {
+            color: var(--primary-navy);
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: var(--text-gray);
+            margin-bottom: 25px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .result-banner {
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .result-banner.success {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .result-banner.error {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .result-icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+
+        .result-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .result-message {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-number.success {
+            color: var(--action-green);
+        }
+
+        .stat-number.error {
+            color: var(--danger-red);
+        }
+
+        .stat-number.warning {
+            color: var(--warning-orange);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+
+        .error-section {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
+        .error-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--danger-red);
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .error-table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #f8f9fa;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-gray);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .error-text {
+            color: var(--danger-red);
+            font-size: 13px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.85;
+        }
+
+        .btn-primary {
+            background-color: var(--action-green);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--text-gray);
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-orange);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="mobile-menu-overlay"></div>
+
+<header>
+    <div class="header-brand">FinanceTracker</div>
+
+    <div class="nav-right">
+        <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+
+        <nav>
+            <a href="/dashboard">Overview</a>
+            <a href="/add-transaction">Add Transaction</a>
+            <a href="/transactions">Transactions</a>
+            <a href="/categories">Categories</a>
+            <a href="/budgets">Budgets</a>
+            <a href="/bulk-upload">Bulk Upload</a>
+            <a href="/export-transactions" style="color:#74b9ff;">Export CSV</a>
+            <a href="/logout" style="color:#ff7675;">Logout</a>
+        </nav>
+
+        <div class="user-badge">
+            <span class="status-indicator"></span>
+            <span class="logged-in-as">User:</span>
+            <span class="username-display">{{ active_user }}</span>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <h2>Upload Results</h2>
+    <p class="subtitle">Here's what happened with your file upload</p>
+
+    <!-- Result Banner -->
+    {% if success %}
+        <div class="result-banner success">
+            <div class="result-icon">✓</div>
+            <div class="result-title">Upload Successful!</div>
+            <div class="result-message">Your transactions have been imported successfully</div>
+        </div>
+    {% else %}
+        <div class="result-banner error">
+            <div class="result-icon">⚠</div>
+            <div class="result-title">Upload Failed</div>
+            <div class="result-message">Some records have validation errors. Please fix them and try again.</div>
+        </div>
+    {% endif %}
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_rows }}</div>
+            <div class="stat-label">Total Rows</div>
+        </div>
+
+        {% if success %}
+            <div class="stat-card">
+                <div class="stat-number success">{{ imported_count }}</div>
+                <div class="stat-label">Successfully Imported</div>
+            </div>
+        {% else %}
+            <div class="stat-card">
+                <div class="stat-number success">{{ valid_count }}</div>
+                <div class="stat-label">Valid Records</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number error">{{ error_count }}</div>
+                <div class="stat-label">Records with Errors</div>
+            </div>
+        {% endif %}
+
+        {% if duplicate_count > 0 %}
+            <div class="stat-card">
+                <div class="stat-number warning">{{ duplicate_count }}</div>
+                <div class="stat-label">Duplicates Skipped</div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Error Details -->
+    {% if not success and errors %}
+        <div class="error-section">
+            <div class="error-header">Validation Errors ({{ error_count }} records)</div>
+
+            <div class="error-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Row</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Category</th>
+                            <th>Errors</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for error in errors %}
+                            <tr>
+                                <td>{{ error.row }}</td>
+                                <td>{{ error.date }}</td>
+                                <td>{{ error.type }}</td>
+                                <td>{{ error.amount }}</td>
+                                <td>{{ error.category }}</td>
+                                <td class="error-text">{{ error.errors }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        {% if success %}
+            <a href="/dashboard" class="btn btn-primary">View Dashboard</a>
+            <a href="/transactions" class="btn btn-secondary">View Transactions</a>
+            <a href="/bulk-upload" class="btn btn-secondary">Upload More</a>
+        {% else %}
+            <a href="/bulk-upload" class="btn btn-warning">Fix Errors & Try Again</a>
+            <a href="/download-template/excel" class="btn btn-secondary">Download New Template</a>
+        {% endif %}
+    </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
