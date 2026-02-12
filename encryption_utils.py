@@ -3,8 +3,12 @@ Encryption utilities for securing sensitive user data
 Uses Fernet (symmetric encryption) from cryptography library
 """
 import os
+from dotenv import load_dotenv
 from cryptography.fernet import Fernet
 from typing import Optional
+
+# Load environment variables
+load_dotenv()
 
 
 class FieldEncryption:
