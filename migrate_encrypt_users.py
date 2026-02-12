@@ -33,7 +33,7 @@ def migrate_user_encryption():
         print()
 
         # Ask for confirmation
-        response = input("⚠️  WARNING: This will modify user data. Have you backed up your database? (yes/no): ")
+        response = input("WARNING: This will modify user data. Have you backed up your database? (yes/no): ")
         if response.lower() != "yes":
             print("Migration cancelled. Please backup your database first.")
             return
@@ -51,7 +51,7 @@ def migrate_user_encryption():
 
                 # Check if already encrypted (encrypted data is much longer)
                 if len(user._full_name) > 200 or len(user._mobile_number) > 100:
-                    print(f"  ⏭️  Skipping - already encrypted")
+                    print(f"  [SKIP]  Skipping - already encrypted")
                     skipped_count += 1
                     continue
 
@@ -68,13 +68,13 @@ def migrate_user_encryption():
                 # Create email hash for lookups
                 user.email_hash = hashlib.sha256(original_email.lower().encode()).hexdigest()
 
-                print(f"  ✅ Encrypted: {original_name} -> [ENCRYPTED]")
-                print(f"  ✅ Email hash created for lookups")
+                print(f"  [OK] Encrypted: {original_name} -> [ENCRYPTED]")
+                print(f"  [OK] Email hash created for lookups")
 
                 migrated_count += 1
 
             except Exception as e:
-                print(f"  ❌ Error encrypting user {user.username}: {str(e)}")
+                print(f"  [ERROR] Error encrypting user {user.username}: {str(e)}")
                 db.session.rollback()
                 continue
 
@@ -85,15 +85,15 @@ def migrate_user_encryption():
             print("=" * 60)
             print("MIGRATION COMPLETED SUCCESSFULLY")
             print("=" * 60)
-            print(f"✅ Migrated: {migrated_count} user(s)")
-            print(f"⏭️  Skipped: {skipped_count} user(s)")
+            print(f"[OK] Migrated: {migrated_count} user(s)")
+            print(f"[SKIP]  Skipped: {skipped_count} user(s)")
             print()
             print("User data is now encrypted!")
             print()
         except Exception as e:
             db.session.rollback()
             print()
-            print("❌ ERROR: Failed to commit changes to database")
+            print("[ERROR] ERROR: Failed to commit changes to database")
             print(f"Error: {str(e)}")
             sys.exit(1)
 
