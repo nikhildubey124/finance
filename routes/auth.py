@@ -23,7 +23,7 @@ def login():
         password = request.form.get("password")
         ip_address = request.remote_addr
 
-        user = User.query.filter_by(username=username).first()
+        user = User.find_by_username(username)
 
         if user and bcrypt.check_password_hash(user.password_hash, password):
             session["user_id"] = user.user_id
@@ -48,8 +48,8 @@ def register():
         email = request.form["email"]
         ip_address = request.remote_addr
 
-        # ✅ CHECK IF USERNAME EXISTS
-        existing_user = User.query.filter_by(username=username).first()
+        # ✅ CHECK IF USERNAME EXISTS (using username hash)
+        existing_user = User.find_by_username(username)
         if existing_user:
             auth_logger.warning(f"Registration failed - Username already exists: {username}, IP: {ip_address}")
             flash("Username already available. Please choose another.", "error")
