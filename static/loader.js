@@ -12,13 +12,16 @@
     const CONFIG = {
         minDisplayTime: 300,        // Minimum time to show loader (ms) - prevents flashing
         autoHideTimeout: 30000,     // Auto-hide after 30 seconds (failsafe)
-        showOnNavigation: true,     // Show loader on link clicks
-        showOnFormSubmit: true,     // Show loader on form submissions
-        showOnPageLoad: true,       // Show loader during page load
+        showOnNavigation: true,     // Show loader on link clicks (actual navigation)
+        showOnFormSubmit: false,    // Don't auto-show for forms (use inline loaders)
+        showOnPageLoad: false,      // Don't show during page load
         excludeSelectors: [         // Don't show loader for these elements
             '.no-loader',
             '[data-no-loader]',
-            '[target="_blank"]'
+            '[target="_blank"]',
+            'button[type="button"]', // Don't show for non-submit buttons
+            '.modal',                // Don't show for modal interactions
+            'a[href^="#"]'          // Don't show for anchor links
         ]
     };
 
@@ -73,25 +76,28 @@
      * Set up event listeners for automatic loader display
      */
     function setupEventListeners() {
-        // Show loader on form submissions
-        if (CONFIG.showOnFormSubmit) {
-            document.addEventListener('submit', function(e) {
-                const form = e.target;
+        // Show loader on form submissions (only if data-show-loader attribute is present)
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
 
-                // Check if form should trigger loader
-                if (!shouldShowLoader(form)) {
-                    return;
-                }
+            // Only show if form explicitly requests it
+            if (!form.hasAttribute('data-show-loader')) {
+                return;
+            }
 
-                // Show loader with custom message if specified
-                const loadingMessage = form.getAttribute('data-loading-message') || 'Processing...';
-                const loadingSubtext = form.getAttribute('data-loading-subtext') || 'Please wait';
+            // Check if form should trigger loader
+            if (!shouldShowLoader(form)) {
+                return;
+            }
 
-                showLoader(loadingMessage, loadingSubtext);
-            });
-        }
+            // Show loader with custom message if specified
+            const loadingMessage = form.getAttribute('data-loading-message') || 'Processing...';
+            const loadingSubtext = form.getAttribute('data-loading-subtext') || 'Please wait';
 
-        // Show loader on navigation (link clicks)
+            showLoader(loadingMessage, loadingSubtext);
+        });
+
+        // Show loader on navigation (link clicks) - only for actual page navigation
         if (CONFIG.showOnNavigation) {
             document.addEventListener('click', function(e) {
                 const link = e.target.closest('a');
@@ -103,17 +109,25 @@
                     return;
                 }
 
-                // Only show loader for same-page navigation (not external links)
+                // Only show loader for actual navigation (not anchors, not javascript:, not external)
                 const href = link.getAttribute('href');
-                if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
-                    const loadingMessage = link.getAttribute('data-loading-message') || 'Loading...';
-                    showLoader(loadingMessage);
+                if (href &&
+                    !href.startsWith('#') &&
+                    !href.startsWith('javascript:') &&
+                    !link.hasAttribute('data-no-loader')) {
+
+                    // Check if it's same-origin navigation
+                    const isSameOrigin = href.startsWith('/') ||
+                                        href.startsWith(window.location.origin) ||
+                                        !href.match(/^https?:\/\//);
+
+                    if (isSameOrigin) {
+                        const loadingMessage = link.getAttribute('data-loading-message') || 'Loading page...';
+                        showLoader(loadingMessage, 'Please wait');
+                    }
                 }
             });
         }
-
-        // Intercept AJAX/Fetch requests (if using fetch API)
-        interceptFetchRequests();
 
         // Handle back/forward browser navigation
         window.addEventListener('pageshow', function(event) {
@@ -121,11 +135,6 @@
             if (event.persisted) {
                 hideLoader(true);
             }
-        });
-
-        // Handle browser unload (page navigation away)
-        window.addEventListener('beforeunload', function() {
-            showLoader('Loading...', 'Navigating to page');
         });
 
         // Error handling - hide loader on errors
@@ -231,27 +240,13 @@
     }
 
     /**
-     * Intercept fetch requests to show/hide loader
+     * Intercept fetch requests to show/hide loader (REMOVED - too aggressive)
+     * Use inline loaders or manual GlobalLoader.show() for AJAX operations instead
      */
     function interceptFetchRequests() {
-        if (typeof window.fetch === 'undefined') return;
-
-        const originalFetch = window.fetch;
-
-        window.fetch = function() {
-            // Show loader for fetch requests
-            showLoader('Loading...', 'Fetching data');
-
-            return originalFetch.apply(this, arguments)
-                .then(function(response) {
-                    hideLoader();
-                    return response;
-                })
-                .catch(function(error) {
-                    hideLoader();
-                    throw error;
-                });
-        };
+        // Disabled to prevent blocking UI for all AJAX requests
+        // Use button-level or inline loaders for better UX
+        return;
     }
 
     /**
@@ -284,21 +279,36 @@
  * Usage Examples:
  * ===============
  *
- * 1. Manual control:
+ * AUTOMATIC BEHAVIOR (Minimal - Opt-in):
+ * - Shows on link clicks for same-origin navigation (can disable with data-no-loader)
+ * - Does NOT auto-show for forms (use inline loaders instead)
+ * - Does NOT auto-show for fetch/AJAX (use inline loaders instead)
+ *
+ * MANUAL CONTROL (Recommended for AJAX):
+ * 1. Full-page blocking loader:
  *    GlobalLoader.show('Processing payment...', 'This may take a moment');
  *    // ... perform operation ...
  *    GlobalLoader.hide();
  *
- * 2. Custom form loading message:
- *    <form data-loading-message="Saving data..." data-loading-subtext="Please don't close this window">
+ * 2. Form with global loader (use sparingly):
+ *    <form data-show-loader data-loading-message="Saving..." data-loading-subtext="Please wait">
  *
  * 3. Disable loader for specific link:
- *    <a href="/page" class="no-loader">No Loading Indicator</a>
+ *    <a href="/page" data-no-loader>No Loading Indicator</a>
  *
- * 4. Custom link loading message:
+ * 4. Custom navigation loading message:
  *    <a href="/export" data-loading-message="Generating report...">Export CSV</a>
  *
- * 5. Check loader status:
+ * INLINE LOADERS (Recommended for AJAX/Forms):
+ * Use button-level spinners instead of full-page blocking:
+ *    button.disabled = true;
+ *    button.classList.add('btn-loading');
+ *    button.textContent = 'Saving...';
+ *    // ... perform AJAX ...
+ *    button.disabled = false;
+ *    button.classList.remove('btn-loading');
+ *
+ * CHECK STATUS:
  *    if (GlobalLoader.isVisible()) {
  *        console.log('Loader is currently visible');
  *    }

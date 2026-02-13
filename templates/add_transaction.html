@@ -203,10 +203,42 @@
             cursor: pointer;
             transition: opacity 0.2s;
             margin-top: 10px;
+            position: relative;
         }
 
-        button[type="submit"]:hover {
+        button[type="submit"]:hover:not(:disabled) {
             opacity: 0.9;
+        }
+
+        button[type="submit"]:disabled,
+        button[type="button"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Inline button loader */
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .btn-loading::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: btn-spinner 0.6s linear infinite;
+        }
+
+        @keyframes btn-spinner {
+            to { transform: rotate(360deg); }
         }
 
         .back-link {
@@ -375,9 +407,7 @@
             {% endif %}
         {% endwith %}
 
-        <form method="POST" id="transactionForm"
-              data-loading-message="Adding transaction..."
-              data-loading-subtext="Saving your data">
+        <form method="POST" id="transactionForm">
 
             <div class="form-group">
                 <label>Transaction Type <span class="required">*</span></label>
@@ -503,9 +533,11 @@
             return;
         }
 
-        // Show loading
+        // Show inline loading state on button
         const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
         submitBtn.disabled = true;
+        submitBtn.classList.add('btn-loading');
         submitBtn.textContent = 'Creating...';
 
         // Submit via fetch
@@ -524,7 +556,8 @@
             if (data.error) {
                 modalAlert.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Create Category';
+                submitBtn.classList.remove('btn-loading');
+                submitBtn.textContent = originalText;
             } else {
                 // Success - refresh category list
                 modalAlert.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
@@ -553,16 +586,32 @@
                 setTimeout(() => {
                     closeQuickAddModal();
                     submitBtn.disabled = false;
-                    submitBtn.textContent = 'Create Category';
+                    submitBtn.classList.remove('btn-loading');
+                    submitBtn.textContent = originalText;
                 }, 1000);
             }
         })
         .catch(error => {
             modalAlert.innerHTML = '<div class="alert alert-error">Failed to create category. Please try again.</div>';
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Create Category';
+            submitBtn.classList.remove('btn-loading');
+            submitBtn.textContent = originalText;
         });
     }
+
+    // Handle main form submission with inline loading
+    document.getElementById('transactionForm').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+
+        // Show inline loading state
+        submitBtn.disabled = true;
+        submitBtn.classList.add('btn-loading');
+        submitBtn.textContent = 'Saving...';
+
+        // Note: Form will submit normally, this just provides visual feedback
+        // The button will be reset when the page reloads/redirects
+    });
 
     // Close modal when clicking outside
     document.getElementById('quickAddModal').addEventListener('click', function(e) {
