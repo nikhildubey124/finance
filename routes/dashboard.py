@@ -158,69 +158,60 @@ def dashboard():
     )
 
     # =========================
-    # Budget Alerts
+    # Budget Alerts (Optimized - single query with joins)
     # =========================
     budget_alerts = []
-    budgets = Budget.query.filter_by(
-        user_id=user_id,
-        month=today.month,
-        year=today.year
-    ).all()
 
-    for budget in budgets:
-        actual_spent = (
-            db.session.query(func.coalesce(func.sum(Transaction.amount), 0))
-            .filter(
-                Transaction.user_id == user_id,
-                Transaction.category_id == budget.category_id,
-                Transaction.transaction_type == "DEBIT",
-                Transaction.transaction_date >= first_day_current_month,
-                Transaction.transaction_date <= today
-            )
-            .scalar()
-        ) or 0
+    # Get all budgets with spending in one query using subquery
+    budget_spending = (
+        db.session.query(
+            Budget.category_id,
+            Budget.monthly_limit,
+            Category.category_name,
+            func.coalesce(func.sum(Transaction.amount), 0).label('actual_spent')
+        )
+        .join(Category, Budget.category_id == Category.category_id)
+        .outerjoin(Transaction, (Transaction.category_id == Budget.category_id) &
+                   (Transaction.user_id == user_id) &
+                   (Transaction.transaction_type == "DEBIT") &
+                   (Transaction.transaction_date >= first_day_current_month) &
+                   (Transaction.transaction_date <= today))
+        .filter(Budget.user_id == user_id,
+                Budget.month == today.month,
+                Budget.year == today.year)
+        .group_by(Budget.category_id, Budget.monthly_limit, Category.category_name)
+        .all()
+    )
 
-        percentage = (float(actual_spent) / float(budget.monthly_limit) * 100) if budget.monthly_limit > 0 else 0
+    for category_id, monthly_limit, category_name, actual_spent in budget_spending:
+        percentage = (float(actual_spent) / float(monthly_limit) * 100) if monthly_limit > 0 else 0
 
         if percentage >= 80:
-            category = Category.query.get(budget.category_id)
             budget_alerts.append({
-                'category_name': category.category_name,
+                'category_name': category_name,
                 'percentage': round(percentage, 1),
                 'spent': float(actual_spent),
-                'limit': float(budget.monthly_limit),
+                'limit': float(monthly_limit),
                 'status': 'danger' if percentage > 100 else 'warning'
             })
 
     # =========================
-    # Budget vs Actual Comparison
+    # Budget vs Actual Comparison (Optimized - reuse previous query)
     # =========================
     budget_comparison = []
     total_budgeted = 0
     total_actual = 0
 
-    for budget in budgets:
-        category = Category.query.get(budget.category_id)
-        actual_spent = (
-            db.session.query(func.coalesce(func.sum(Transaction.amount), 0))
-            .filter(
-                Transaction.user_id == user_id,
-                Transaction.category_id == budget.category_id,
-                Transaction.transaction_type == "DEBIT",
-                Transaction.transaction_date >= first_day_current_month,
-                Transaction.transaction_date <= today
-            )
-            .scalar()
-        ) or 0
-
-        total_budgeted += float(budget.monthly_limit)
+    # Reuse budget_spending data from previous query (already optimized)
+    for category_id, monthly_limit, category_name, actual_spent in budget_spending:
+        total_budgeted += float(monthly_limit)
         total_actual += float(actual_spent)
 
         budget_comparison.append({
-            'category': category.category_name,
-            'budget': float(budget.monthly_limit),
+            'category': category_name,
+            'budget': float(monthly_limit),
             'actual': float(actual_spent),
-            'variance': float(budget.monthly_limit) - float(actual_spent)
+            'variance': float(monthly_limit) - float(actual_spent)
         })
 
     # =========================
