@@ -133,6 +133,7 @@ class Transaction(db.Model):
     amount = db.Column(db.Numeric(12, 2))
     category_id = db.Column(db.Integer, db.ForeignKey("categories.category_id"))
     transaction_date = db.Column(db.Date)
+    description = db.Column(db.Text, nullable=True)  # Optional notes/description
     category = db.relationship('Category', backref='transactions')
 
 

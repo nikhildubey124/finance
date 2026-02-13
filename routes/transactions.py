@@ -13,11 +13,16 @@ def add_transaction():
     if "user_id" not in session:
         return redirect("/")
 
+    user_id = session["user_id"]
+
     # Default type
     txn_type = request.args.get("type", "DEBIT")
 
-    # Load categories based on type
-    categories = Category.query.filter_by(category_type=txn_type).all()
+    # Load categories based on type (system + user's custom categories)
+    categories = Category.query.filter(
+        (Category.category_type == txn_type) &
+        ((Category.user_id == None) | (Category.user_id == user_id))
+    ).order_by(Category.category_name).all()
 
     if request.method == "POST":
         try:
@@ -25,33 +30,45 @@ def add_transaction():
             transaction_type = request.form.get("type")
             amount = request.form.get("amount")
             category_id = request.form.get("category_id")
+            transaction_date_str = request.form.get("transaction_date")
+            description = request.form.get("description", "").strip()
 
             current_app.logger.debug(f"Transaction form submitted by {username}: Type={transaction_type}, Amount={amount}")
 
             # HARD VALIDATION
             if not transaction_type or not amount or not category_id:
                 current_app.logger.warning(f"Missing transaction data from user {username}")
-                return "Missing form data", 400
+                flash("Please fill in all required fields.", "error")
+                return redirect("/add-transaction")
+
+            # Parse transaction date
+            if transaction_date_str:
+                txn_date = datetime.strptime(transaction_date_str, "%Y-%m-%d").date()
+            else:
+                txn_date = date.today()
 
             txn = Transaction(
-                user_id=session["user_id"],
+                user_id=user_id,
                 transaction_type=transaction_type.upper().strip(),
                 amount=float(amount),
                 category_id=int(category_id),
-                transaction_date=date.today()
+                transaction_date=txn_date,
+                description=description if description else None
             )
 
             db.session.add(txn)
             db.session.commit()
 
-            current_app.logger.info(f"Transaction added - User: {username}, Type: {transaction_type}, Amount: {amount}, Category ID: {category_id}")
+            current_app.logger.info(f"Transaction added - User: {username}, Type: {transaction_type}, Amount: {amount}, Category ID: {category_id}, Date: {txn_date}")
 
+            flash("Transaction added successfully!", "success")
             return redirect("/dashboard")
 
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Transaction insertion error - User: {session.get('username', 'Unknown')}, Error: {str(e)}")
-            return "Error inserting transaction", 500
+            flash("Error adding transaction. Please try again.", "error")
+            return redirect("/add-transaction")
 
     return render_template(
         "add_transaction.html",
@@ -59,6 +76,59 @@ def add_transaction():
         txn_type=txn_type,
         active_user=session.get("username", "Guest")
     )
+
+
+@txn_bp.route("/quick-add-category", methods=["POST"])
+def quick_add_category():
+    """Quick add category from add transaction page (AJAX endpoint)"""
+    if "user_id" not in session:
+        return {"error": "Not authenticated"}, 401
+
+    try:
+        user_id = session["user_id"]
+        category_name = request.form.get("category_name", "").strip()
+        category_type = request.form.get("category_type", "").upper().strip()
+
+        # Validation
+        if not category_name or not category_type:
+            return {"error": "Category name and type are required"}, 400
+
+        if category_type not in ["CREDIT", "DEBIT"]:
+            return {"error": "Invalid category type"}, 400
+
+        # Check for duplicate (case-insensitive)
+        existing = Category.query.filter(
+            func.lower(Category.category_name) == category_name.lower(),
+            Category.category_type == category_type,
+            ((Category.user_id == user_id) | (Category.user_id == None))
+        ).first()
+
+        if existing:
+            return {"error": f"Category '{category_name}' already exists for {category_type} transactions"}, 409
+
+        # Create new category
+        new_category = Category(
+            category_name=category_name,
+            category_type=category_type,
+            user_id=user_id
+        )
+
+        db.session.add(new_category)
+        db.session.commit()
+
+        current_app.logger.info(f"Quick category created - User: {session.get('username')}, Category: {category_name}, Type: {category_type}")
+
+        return {
+            "success": True,
+            "category_id": new_category.category_id,
+            "category_name": new_category.category_name,
+            "message": f"Category '{category_name}' created successfully!"
+        }, 201
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Quick category creation error: {str(e)}")
+        return {"error": "Failed to create category"}, 500
 
 
 @txn_bp.route("/transactions")
