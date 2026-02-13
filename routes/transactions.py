@@ -70,12 +70,19 @@ def add_transaction():
             flash("Error adding transaction. Please try again.", "error")
             return redirect("/add-transaction")
 
-    return render_template(
+    response = current_app.make_response(render_template(
         "add_transaction.html",
         categories=categories,
         txn_type=txn_type,
         active_user=session.get("username", "Guest")
-    )
+    ))
+
+    # Prevent caching to avoid showing stale flash messages
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+
+    return response
 
 
 @txn_bp.route("/quick-add-category", methods=["POST"])

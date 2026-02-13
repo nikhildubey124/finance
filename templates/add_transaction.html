@@ -330,10 +330,12 @@
         }
 
         .alert {
-            padding: 12px;
+            padding: 12px 40px 12px 12px;
             border-radius: 6px;
             margin-bottom: 15px;
             font-size: 14px;
+            position: relative;
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
         }
 
         .alert-success {
@@ -346,6 +348,37 @@
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
+        }
+
+        .alert-close {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 20px;
+            font-weight: bold;
+            color: inherit;
+            opacity: 0.5;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            line-height: 20px;
+        }
+
+        .alert-close:hover {
+            opacity: 1;
+        }
+
+        .alert.fade-out {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        .alert.hidden {
+            display: none;
         }
 
         @media (max-width: 480px) {
@@ -402,7 +435,10 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                    <div class="alert alert-{{ category }}" data-alert-id="alert-{{ loop.index }}">
+                        {{ message }}
+                        <button class="alert-close" onclick="dismissAlert(this)" aria-label="Close">&times;</button>
+                    </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
@@ -493,14 +529,88 @@
 <script src="/static/app.js"></script>
 
 <script>
+    // ============================================
+    // Alert Management - Auto-dismiss and Close
+    // ============================================
+
+    /**
+     * Dismiss an alert with animation
+     */
+    function dismissAlert(button) {
+        const alert = button.closest('.alert');
+        if (alert) {
+            alert.classList.add('fade-out');
+            setTimeout(() => {
+                alert.classList.add('hidden');
+                alert.remove();
+            }, 300);
+        }
+    }
+
+    /**
+     * Auto-dismiss alerts after 5 seconds
+     */
+    function setupAutoDismiss() {
+        const alerts = document.querySelectorAll('.alert');
+
+        alerts.forEach(alert => {
+            // Check if this is a fresh alert or stale one
+            const alertId = alert.getAttribute('data-alert-id');
+            const lastShownAlert = sessionStorage.getItem('lastShownAlert');
+            const pageLoadTime = sessionStorage.getItem('pageLoadTime');
+            const currentTime = Date.now();
+
+            // If we navigated back to the page (more than 2 seconds since last load),
+            // and it's the same alert, hide it immediately
+            if (lastShownAlert === alertId && pageLoadTime) {
+                const timeSinceLoad = currentTime - parseInt(pageLoadTime);
+                if (timeSinceLoad > 2000) { // 2 seconds
+                    // This is a stale alert, hide it immediately
+                    alert.classList.add('hidden');
+                    alert.remove();
+                    return;
+                }
+            }
+
+            // Store this alert as shown
+            sessionStorage.setItem('lastShownAlert', alertId);
+            sessionStorage.setItem('pageLoadTime', currentTime.toString());
+
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (!alert.classList.contains('hidden')) {
+                    alert.classList.add('fade-out');
+                    setTimeout(() => {
+                        alert.classList.add('hidden');
+                        alert.remove();
+                    }, 300);
+                }
+            }, 5000); // 5 seconds
+        });
+    }
+
+    /**
+     * Clear alert tracking on form submit
+     */
+    function clearAlertTracking() {
+        sessionStorage.removeItem('lastShownAlert');
+        sessionStorage.removeItem('pageLoadTime');
+    }
+
     // Set today's date as default
     document.addEventListener('DOMContentLoaded', function() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('transactionDate').value = today;
+
+        // Setup auto-dismiss for alerts
+        setupAutoDismiss();
     });
 
     // Update category list when type changes
     function updateCategoryList() {
+        // Clear alert tracking when navigating
+        clearAlertTracking();
+
         const type = document.getElementById('transactionType').value;
         window.location.href = '/add-transaction?type=' + type;
     }
@@ -608,6 +718,9 @@
         submitBtn.disabled = true;
         submitBtn.classList.add('btn-loading');
         submitBtn.textContent = 'Saving...';
+
+        // Clear alert tracking so new alerts will be shown
+        clearAlertTracking();
 
         // Note: Form will submit normally, this just provides visual feedback
         // The button will be reset when the page reloads/redirects
