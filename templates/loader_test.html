@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Indicator Test Page | FinanceTracker</title>
+
+    <link rel="stylesheet" href="/static/responsive.css">
+    {% include 'includes/loader_assets.html' %}
+
+    <style>
+        :root {
+            --primary-navy: #1a2b3c;
+            --action-green: #27ae60;
+            --light-gray: #f4f7f6;
+            --text-gray: #555;
+            --white: #ffffff;
+            --border-color: #e1e8ed;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            padding: 20px;
+            color: var(--primary-navy);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--white);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            color: var(--primary-navy);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-gray);
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .test-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .test-section h2 {
+            color: var(--primary-navy);
+            margin-top: 0;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .test-section p {
+            color: var(--text-gray);
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.85;
+        }
+
+        .btn-primary {
+            background-color: var(--action-green);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--primary-navy);
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary-navy);
+            color: var(--primary-navy);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        input, select, textarea {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .success-box {
+            background-color: #d4edda;
+            border-left: 4px solid var(--action-green);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    {% include 'includes/loader_html.html' %}
+
+    <div class="container">
+        <h1>Loading Indicator Test Page</h1>
+        <p class="subtitle">
+            This page demonstrates all features of the global loading indicator.
+            Try each test to see how the loader works automatically!
+        </p>
+
+        <!-- Test 1: Automatic Form Submission -->
+        <div class="test-section">
+            <h2>Test 1: Automatic Form Submission Loader</h2>
+            <p>
+                Submit this form to see the loader appear automatically.
+                The loader will show "Processing..." while the form submits.
+            </p>
+            <form method="POST" action="#test1">
+                <input type="text" name="test_field" placeholder="Enter some text" required>
+                <button type="submit" class="btn btn-primary">Submit Form (Shows Loader)</button>
+            </form>
+        </div>
+
+        <!-- Test 2: Custom Loading Message -->
+        <div class="test-section">
+            <h2>Test 2: Custom Loading Messages</h2>
+            <p>
+                This form uses <span class="code">data-loading-message</span> and
+                <span class="code">data-loading-subtext</span> attributes
+                to display custom text in the loader.
+            </p>
+            <form method="POST" action="#test2"
+                  data-loading-message="Saving your transaction..."
+                  data-loading-subtext="This may take a few moments">
+                <input type="number" name="amount" placeholder="Amount" required>
+                <select name="type">
+                    <option value="CREDIT">Income</option>
+                    <option value="DEBIT">Expense</option>
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    Submit with Custom Message
+                </button>
+            </form>
+        </div>
+
+        <!-- Test 3: Navigation Links -->
+        <div class="test-section">
+            <h2>Test 3: Automatic Navigation Loader</h2>
+            <p>
+                Click these links to see the loader appear during navigation.
+                The loader shows automatically for same-page links.
+            </p>
+            <div class="btn-group">
+                <a href="/dashboard" class="btn btn-primary">
+                    Go to Dashboard (Shows Loader)
+                </a>
+                <a href="/transactions"
+                   data-loading-message="Loading transactions..."
+                   class="btn btn-secondary">
+                    View Transactions (Custom Message)
+                </a>
+            </div>
+        </div>
+
+        <!-- Test 4: Disabled Loader -->
+        <div class="test-section">
+            <h2>Test 4: Disabled Loader</h2>
+            <p>
+                Elements with <span class="code">class="no-loader"</span> or
+                <span class="code">data-no-loader</span> won't trigger the loader.
+                Useful for instant actions.
+            </p>
+            <div class="btn-group">
+                <button class="btn btn-warning no-loader" onclick="alert('No loader shown!')">
+                    Click Me (No Loader)
+                </button>
+                <button class="btn btn-outline" data-no-loader onclick="toggleInfo()">
+                    Toggle Info Box (No Loader)
+                </button>
+            </div>
+            <div id="infoBox" style="display:none; margin-top:15px;">
+                <div class="success-box">
+                    This appeared instantly without showing the loader!
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 5: Manual Control -->
+        <div class="test-section">
+            <h2>Test 5: Manual Loader Control</h2>
+            <p>
+                Use JavaScript to manually control the loader for custom operations
+                or AJAX requests.
+            </p>
+            <div class="btn-group">
+                <button class="btn btn-primary no-loader" onclick="testManualShow()">
+                    Show Loader (2 seconds)
+                </button>
+                <button class="btn btn-secondary no-loader" onclick="testCustomMessage()">
+                    Custom Message (3 seconds)
+                </button>
+                <button class="btn btn-warning no-loader" onclick="testAsyncOperation()">
+                    Simulate AJAX Call
+                </button>
+            </div>
+        </div>
+
+        <!-- Test 6: Multiple Operations -->
+        <div class="test-section">
+            <h2>Test 6: Multiple Concurrent Operations</h2>
+            <p>
+                The loader handles multiple concurrent operations correctly.
+                It only hides when all operations complete.
+            </p>
+            <div class="btn-group">
+                <button class="btn btn-primary no-loader" onclick="testMultipleOps()">
+                    Start 3 Operations
+                </button>
+            </div>
+        </div>
+
+        <!-- Test 7: Status Check -->
+        <div class="test-section">
+            <h2>Test 7: Check Loader Status</h2>
+            <p>
+                Check if the loader is currently visible using JavaScript.
+            </p>
+            <div class="btn-group">
+                <button class="btn btn-outline no-loader" onclick="checkLoaderStatus()">
+                    Check Loader Status
+                </button>
+            </div>
+            <div id="statusResult" style="margin-top:15px;"></div>
+        </div>
+
+        <!-- Info -->
+        <div class="info-box">
+            <strong>Note:</strong> Most tests require submitting forms or navigating away.
+            Use the manual control tests to see the loader without page reload.
+        </div>
+
+        <div class="success-box">
+            <strong>All tests working?</strong> Your global loading indicator is properly configured! 🎉
+        </div>
+    </div>
+
+    {% include 'includes/loader_scripts.html' %}
+    <script src="/static/app.js"></script>
+
+    <script>
+        // Test 4: Toggle info box
+        function toggleInfo() {
+            const box = document.getElementById('infoBox');
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Test 5: Manual show with timeout
+        function testManualShow() {
+            GlobalLoader.show('Testing manual control...', 'Will hide in 2 seconds');
+            setTimeout(() => {
+                GlobalLoader.hide();
+            }, 2000);
+        }
+
+        function testCustomMessage() {
+            GlobalLoader.show('Processing payment...', 'Please do not close this window');
+            setTimeout(() => {
+                GlobalLoader.hide();
+            }, 3000);
+        }
+
+        async function testAsyncOperation() {
+            GlobalLoader.show('Fetching data...', 'Calling API');
+
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 2500));
+
+            GlobalLoader.hide();
+            Toast.success('Operation completed successfully!');
+        }
+
+        // Test 6: Multiple concurrent operations
+        function testMultipleOps() {
+            GlobalLoader.show('Operation 1...', 'Processing multiple requests');
+
+            setTimeout(() => {
+                GlobalLoader.show('Operation 2...', 'Second request');
+            }, 500);
+
+            setTimeout(() => {
+                GlobalLoader.show('Operation 3...', 'Final request');
+            }, 1000);
+
+            // All complete after 3 seconds
+            setTimeout(() => {
+                GlobalLoader.hide();
+                GlobalLoader.hide();
+                GlobalLoader.hide();
+                Toast.success('All operations completed!');
+            }, 3000);
+        }
+
+        // Test 7: Check status
+        function checkLoaderStatus() {
+            const isVisible = GlobalLoader.isVisible();
+            const resultDiv = document.getElementById('statusResult');
+
+            if (isVisible) {
+                resultDiv.innerHTML = `
+                    <div class="info-box">
+                        Loader Status: <strong>VISIBLE</strong> ✓
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="success-box">
+                        Loader Status: <strong>HIDDEN</strong> ✓
+                    </div>
+                `;
+            }
+        }
+
+        // Show welcome message
+        setTimeout(() => {
+            Toast.info('Welcome to the Loader Test Page! Try each test.');
+        }, 500);
+    </script>
+
+</body>
+</html>

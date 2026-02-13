@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | FinanceTracker</title>
+
+    <!-- Existing CSS -->
+    <link rel="stylesheet" href="/static/responsive.css">
+
+    <!-- ADD THIS: Global Loader CSS -->
+    {% include 'includes/loader_assets.html' %}
+
+    <style>
+        /* Your existing styles */
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: #f4f7f6;
+        }
+        /* ... more styles ... */
+    </style>
+</head>
+<body>
+
+    <!-- ADD THIS: Global Loader HTML (right after <body>) -->
+    {% include 'includes/loader_html.html' %}
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-brand">FinanceTracker</div>
+        <div class="nav-right">
+            <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+            <nav>
+                <a href="/dashboard">Overview</a>
+                <a href="/add-transaction">Add Transaction</a>
+                <a href="/transactions">Transactions</a>
+                <a href="/categories">Categories</a>
+                <a href="/budgets">Budgets</a>
+                <a href="/bulk-upload">Bulk Upload</a>
+                <a href="/export-transactions"
+                   data-loading-message="Generating CSV..."
+                   data-loading-subtext="This may take a moment"
+                   style="color:#74b9ff;">
+                    Export CSV
+                </a>
+                <a href="/logout" style="color:#ff7675;">Logout</a>
+            </nav>
+            <div class="user-badge">
+                <span class="status-indicator"></span>
+                <span class="logged-in-as">User:</span>
+                <span class="username-display">{{ active_user }}</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h1>Dashboard</h1>
+
+        <!-- Example Form with Custom Loader Message -->
+        <form method="POST" action="/quick-add"
+              data-loading-message="Adding transaction..."
+              data-loading-subtext="Updating your balance">
+            <input type="number" name="amount" placeholder="Amount" required>
+            <select name="type">
+                <option value="DEBIT">Expense</option>
+                <option value="CREDIT">Income</option>
+            </select>
+            <button type="submit">Quick Add</button>
+        </form>
+
+        <!-- Content that shows automatically with loader during page load -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Balance</h3>
+                <p>${{ balance }}</p>
+            </div>
+            <!-- More stats... -->
+        </div>
+
+        <!-- Example: Link with custom loader message -->
+        <a href="/reports/monthly"
+           class="btn btn-primary"
+           data-loading-message="Generating monthly report..."
+           data-loading-subtext="Analyzing your data">
+            View Monthly Report
+        </a>
+
+        <!-- Example: Quick action that shouldn't show loader -->
+        <button class="no-loader" onclick="toggleView()">
+            Toggle View
+        </button>
+    </div>
+
+    <!-- ADD THIS: Global Loader Scripts (before other scripts) -->
+    {% include 'includes/loader_scripts.html' %}
+
+    <!-- Your existing scripts -->
+    <script src="/static/app.js"></script>
+
+    <!-- Page-specific script -->
+    <script>
+        // Example: Manual loader control
+        async function exportCustomReport() {
+            GlobalLoader.show('Generating custom report...', 'This may take up to 30 seconds');
+
+            try {
+                const response = await fetch('/api/export/custom');
+                const blob = await response.blob();
+                // Download logic...
+                GlobalLoader.hide();
+            } catch (error) {
+                GlobalLoader.hide();
+                Toast.error('Export failed');
+            }
+        }
+
+        // Example: Quick action without loader
+        function toggleView() {
+            // This runs instantly, no loader needed
+            document.body.classList.toggle('compact-view');
+        }
+    </script>
+</body>
+</html>
+
+<!--
+NOTES:
+======
+
+1. AUTOMATIC LOADER TRIGGERS:
+   - Form submissions (login, add transaction, etc.)
+   - Link navigation (dashboard, transactions, etc.)
+   - Fetch API calls (intercepted automatically)
+   - Page loads and refreshes
+
+2. CUSTOM MESSAGES:
+   - Use data-loading-message="..." for custom text
+   - Use data-loading-subtext="..." for additional info
+
+3. DISABLE LOADER:
+   - Add class="no-loader" to forms/links/buttons
+   - Add data-no-loader attribute
+   - Useful for instant actions (toggles, modals, etc.)
+
+4. MANUAL CONTROL:
+   - GlobalLoader.show('message', 'subtext')
+   - GlobalLoader.hide()
+   - GlobalLoader.isVisible()
+
+5. BACKWARD COMPATIBILITY:
+   - Loading.show() still works (uses GlobalLoader underneath)
+   - Loading.hide() still works
+
+6. FAILSAFE:
+   - Loader auto-hides after 30 seconds
+   - Loader hides on page errors
+   - Minimum display time prevents flashing (300ms)
+
+7. ACCESSIBILITY:
+   - Respects prefers-reduced-motion
+   - Keyboard accessible
+   - Screen reader friendly
+
+For complete documentation, see:
+- LOADING_INDICATOR_GUIDE.md (detailed guide)
+- QUICK_START_LOADER.md (quick reference)
+-->

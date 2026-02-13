@@ -229,6 +229,11 @@ def user_manual():
     """Display user manual page with download option"""
     return render_template("user_manual.html")
 
+@auth_bp.route("/loader-test")
+def loader_test():
+    """Test page for global loading indicator"""
+    return render_template("loader_test.html")
+
 @auth_bp.route("/logout")
 def logout():
     username = session.get("username", "Unknown")

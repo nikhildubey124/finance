@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FinanceTracker{% endblock %}</title>
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/static/responsive.css">
+    <link rel="stylesheet" href="/static/loader.css">
+    {% block extra_css %}{% endblock %}
+
+    <style>
+        :root {
+            --primary-navy: #1a2b3c;
+            --action-green: #27ae60;
+            --light-gray: #f4f7f6;
+            --text-gray: #555;
+            --white: #ffffff;
+            --border-color: #e1e8ed;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            color: var(--primary-navy);
+        }
+
+        {% block extra_styles %}{% endblock %}
+    </style>
+</head>
+<body>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay"></div>
+
+    <!-- Global Loading Indicator -->
+    <div id="global-loader">
+        <div class="loader-container">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Loading...</div>
+            <div class="loader-subtext">Please wait</div>
+        </div>
+    </div>
+
+    {% block header %}
+    <!-- Default header - can be overridden -->
+    <header>
+        <div class="header-brand">FinanceTracker</div>
+        <div class="nav-right">
+            <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+            <nav>
+                {% if active_user %}
+                    <a href="/dashboard">Overview</a>
+                    <a href="/add-transaction">Add Transaction</a>
+                    <a href="/transactions">Transactions</a>
+                    <a href="/categories">Categories</a>
+                    <a href="/budgets">Budgets</a>
+                    <a href="/bulk-upload">Bulk Upload</a>
+                    <a href="/export-transactions" style="color:#74b9ff;">Export CSV</a>
+                    <a href="/logout" style="color:#ff7675;">Logout</a>
+                {% else %}
+                    <a href="/">Home</a>
+                    <a href="/login">Login</a>
+                    <a href="/register">Sign Up</a>
+                    <a href="/user-manual">User Manual</a>
+                {% endif %}
+            </nav>
+
+            {% if active_user %}
+            <div class="user-badge">
+                <span class="status-indicator"></span>
+                <span class="logged-in-as">User:</span>
+                <span class="username-display">{{ active_user }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </header>
+    {% endblock %}
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages-container">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    {% block content %}
+    <!-- Page-specific content goes here -->
+    {% endblock %}
+
+    <!-- Footer -->
+    {% block footer %}
+    {% endblock %}
+
+    <!-- JavaScript -->
+    <script src="/static/loader.js"></script>
+    <script src="/static/app.js"></script>
+    {% block extra_js %}{% endblock %}
+
+    <!-- Page-specific scripts -->
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>

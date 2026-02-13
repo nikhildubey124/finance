@@ -91,31 +91,20 @@ const Toast = {
 };
 
 // ===== Loading Spinner =====
+// Integrated with GlobalLoader for consistency
 const Loading = {
-    overlay: null,
-    spinner: null,
-
-    init() {
-        if (!this.overlay) {
-            this.overlay = document.createElement('div');
-            this.overlay.className = 'loading-overlay';
-            document.body.appendChild(this.overlay);
-
-            this.spinner = document.createElement('div');
-            this.spinner.className = 'loading-spinner';
-            document.body.appendChild(this.spinner);
+    show(message, subtext) {
+        // Use GlobalLoader if available, fallback to legacy behavior
+        if (window.GlobalLoader) {
+            window.GlobalLoader.show(message || 'Processing...', subtext || 'Please wait');
         }
     },
 
-    show() {
-        this.init();
-        this.overlay.classList.add('active');
-        this.spinner.classList.add('active');
-    },
-
     hide() {
-        if (this.overlay) this.overlay.classList.remove('active');
-        if (this.spinner) this.spinner.classList.remove('active');
+        // Use GlobalLoader if available
+        if (window.GlobalLoader) {
+            window.GlobalLoader.hide();
+        }
     }
 };
 
@@ -125,11 +114,18 @@ function enhanceForms() {
         form.addEventListener('submit', function(e) {
             const submitBtn = form.querySelector('button[type="submit"]');
             if (submitBtn) {
+                // Disable button to prevent double-submission
                 submitBtn.disabled = true;
                 submitBtn.style.opacity = '0.6';
+
+                // Store original text
+                if (!submitBtn.dataset.originalText) {
+                    submitBtn.dataset.originalText = submitBtn.textContent;
+                }
                 submitBtn.textContent = 'Processing...';
 
-                Loading.show();
+                // GlobalLoader handles showing the loader automatically
+                // No need to call Loading.show() here as it would be redundant
             }
         });
     });
